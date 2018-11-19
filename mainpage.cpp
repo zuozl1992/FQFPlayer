@@ -26,7 +26,7 @@ MainPage::MainPage(QWidget *parent) :
     ui->musicShowList->addItems(musicList->getMusicNameList());
 
     trayIconInit();
-    startTimer(40);
+    startTimer(500);
 
     if(!shortcutInit())
     {
@@ -48,6 +48,7 @@ void MainPage::timerEvent(QTimerEvent *)
     if(s == FQFDemuxThread::End)
     {
         playNext();
+        return;
     }
     long long total = dt->getFileTimeMs();
     long long pts = dt->getNowTimeMs();
