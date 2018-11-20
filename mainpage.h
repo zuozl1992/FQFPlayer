@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include <QMenu>
+#include <QPixmap>
+#include <QPushButton>
 
 #ifdef _WIN32
 #include <QSystemTrayIcon>
@@ -46,11 +48,16 @@ protected slots:
     void cutActivatedSlot(QxtGlobalShortcut *cut);
     void actionTriggeredlot(bool checked);
     void trayIconActivatedSlot(QSystemTrayIcon::ActivationReason reason);
+    void exitBtnClickedSlot();
 
 protected:
     void closeEvent(QCloseEvent *);
     void changeEvent(QEvent* event);
     void timerEvent(QTimerEvent *);
+    void paintEvent(QPaintEvent *);
+    void mousePressEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
     void playNext();
     void playPrev();
     void playPause();
@@ -60,7 +67,6 @@ protected:
     bool shortcutInit();
 
     int nowIndex = 0;
-    bool posIsPressed = false;
     FQFDemuxThread *dt;
     QxtGlobalShortcut *nextCut;
     QxtGlobalShortcut *prevCut;
@@ -73,6 +79,11 @@ protected:
     QAction *playPauseAction;
     QAction *exitAction;
     MusicList::PlayType playType = MusicList::Order;
+    QPixmap pix;
+    int timerID = 0;
+    QPoint oldPos;
+    QPushButton *exitBtn;
+    bool isMove = false;
 
 #ifdef _WIN32
     QSystemTrayIcon *trayIcon;

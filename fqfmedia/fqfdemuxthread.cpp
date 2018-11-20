@@ -6,7 +6,9 @@
 using namespace std;
 #include <QDebug>
 
-FQFDemuxThread::FQFDemuxThread(){}
+FQFDemuxThread::FQFDemuxThread(){
+    startTh();
+}
 
 FQFDemuxThread::~FQFDemuxThread()
 {
@@ -18,10 +20,10 @@ bool FQFDemuxThread::openFile(const char * path)
 {
     if (!path || path[0] == '\0')
 		return false;
-    startTh();
+
 	mux.lock();
     if (!demux) demux = new FQFDemux();
-	if (!at) at = new FQFAudioThread();
+    if (!at) at = new FQFAudioThread();
     bool re = demux->openFile(path);
 	if (!re)
 	{
@@ -29,7 +31,9 @@ bool FQFDemuxThread::openFile(const char * path)
 		return false;
 	}
 	bool re2 = true;
-    if (!at->openDecodeTh(demux->copyAudioPara(), demux->getFileSampleRate(), demux->getFileChannels()))
+    if (!at->openDecodeTh(demux->copyAudioPara(),
+                          demux->getFileSampleRate(),
+                          demux->getFileChannels()))
 	{
 		re2 = false;
     }
@@ -169,8 +173,7 @@ void FQFDemuxThread::run()
         }
         if (demux->getPktType(pkt) == FQFDemux::AudioPacket)
         {
-            if(at)
-                at->pushPacketToBufferList(pkt);
+            if(at) at->pushPacketToBufferList(pkt);
         }
         else
         {

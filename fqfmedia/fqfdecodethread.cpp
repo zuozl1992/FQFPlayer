@@ -1,11 +1,9 @@
 ﻿#include "fqfdecodethread.h"
-
 #include "fqfdecode.h"
 
 FQFDecodeThread::FQFDecodeThread()
 {
-	if (!decode)
-		decode = new FQFDecode();
+    if (!decode) decode = new FQFDecode();
 }
 
 
@@ -50,7 +48,6 @@ AVPacket * FQFDecodeThread::popPacketFromBufferList()
 void FQFDecodeThread::clear()
 {
 	mux.lock();
-
     decode->clear();
 	while (!packs.empty())
 	{

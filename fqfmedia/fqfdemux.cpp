@@ -59,12 +59,8 @@ bool FQFDemux::openFile(const char * path)
 void FQFDemux::closeFile()
 {
     mux.lock();
-    if (!ic)
-    {
-        mux.unlock();
-        return;
-    }
-    avformat_close_input(&ic);
+    if (ic)
+        avformat_close_input(&ic);
     totalMs = 0;
     audioStream = -1;
     sampleRate = 0;

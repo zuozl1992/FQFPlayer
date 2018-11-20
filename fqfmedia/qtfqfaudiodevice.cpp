@@ -53,13 +53,9 @@ void QtFQFAudioDevice::setPause(bool isPause)
         return;
     }
     if (isPause)
-    {
         output->suspend();
-    }
     else
-    {
         output->resume();
-    }
     mux.unlock();
 }
 bool QtFQFAudioDevice::openDevice(int sampleRate, int channels)
@@ -78,22 +74,17 @@ bool QtFQFAudioDevice::openDevice(int sampleRate, int channels)
     output = new QAudioOutput(fmt);
     io = output->start();
     mux.unlock();
-    if (io)
-        return true;
+    if (io) return true;
     return false;
 }
 void QtFQFAudioDevice::clear() {
     mux.lock();
-    if (io)
-    {
-        io->reset();
-    }
+    if (io) io->reset();
     mux.unlock();
 }
 bool QtFQFAudioDevice::writeToDeviceBuffer(const unsigned char *data, int datasize)
 {
-    if (!data || datasize <= 0)
-        return false;
+    if (!data || datasize <= 0) return false;
     mux.lock();
     if (!output || !io)
     {
@@ -102,8 +93,7 @@ bool QtFQFAudioDevice::writeToDeviceBuffer(const unsigned char *data, int datasi
     }
     qint64 size = io->write((const char *)data, datasize);
     mux.unlock();
-    if (datasize != size)
-        return false;
+    if (datasize != size) return false;
     return true;
 }
 

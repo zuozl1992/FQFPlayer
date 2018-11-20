@@ -1,5 +1,4 @@
 ﻿#include "fqfaudiothread.h"
-
 #include "fqfdecode.h"
 #include "fqfaudiodevice.h"
 #include "fqfresample.h"
@@ -9,10 +8,8 @@ using namespace std;
 
 FQFAudioThread::FQFAudioThread()
 {
-    if (!res)
-        res = new FQFResample();
-    if (!ap)
-        ap = FQFAudioDevice::getObject();
+    if (!res) res = new FQFResample();
+    if (!ap) ap = FQFAudioDevice::getObject();
 }
 
 FQFAudioThread::~FQFAudioThread()
@@ -23,25 +20,14 @@ FQFAudioThread::~FQFAudioThread()
 
 bool FQFAudioThread::openDecodeTh(AVCodecParameters * para, int sampleRate, int channels)
 {
-	if (!para)
-		return false;
+    if (!para) return false;
     clear();
 	amux.lock();
 	pts = 0;
-	
 	bool re = true;
-    if (!res->openResample(para, false))
-	{
-		re = false;
-	}
-    if (!ap->openDevice(sampleRate, channels))
-	{
-		re = false;
-	}
-    if (!decode->openDecode(para))
-	{
-		re = false;
-	}
+    if (!res->openResample(para, false)) re = false;
+    if (!ap->openDevice(sampleRate, channels)) re = false;
+    if (!decode->openDecode(para)) re = false;
     if(re){
         status = FQFDecodeThread::Play;
         isFinishedReading = false;
@@ -80,7 +66,6 @@ void FQFAudioThread::clear()
 
 void FQFAudioThread::setPause(bool isPause)
 {
-    //amux.lock();
     if(status == FQFDecodeThread::Stop && isPause == true)
     {
         mux.unlock();
@@ -90,7 +75,6 @@ void FQFAudioThread::setPause(bool isPause)
 
     if(ap)
         ap->setPause(isPause);
-    //amux.unlock();
 }
 
 long long FQFAudioThread::getPlayingMs()
@@ -100,9 +84,7 @@ long long FQFAudioThread::getPlayingMs()
 
 void FQFAudioThread::setPlayingMs(long long pts)
 {
-//    amux.lock();
     this->pts = pts;
-//    amux.unlock();
 }
 
 void FQFAudioThread::run()

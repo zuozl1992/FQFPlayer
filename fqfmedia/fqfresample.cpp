@@ -1,4 +1,4 @@
-﻿#include "FQFResample.h"
+﻿#include "fqfresample.h"
 #include <iostream>
 extern "C"
 {

@@ -9,6 +9,10 @@
 #include <QApplication>
 #include <QSystemTrayIcon>
 #include <QMessageBox>
+#include <QPainter>
+#include <QBitmap>
+
+#define UpdateTimerTime 1000
 
 MainPage::MainPage(QWidget *parent) :
     QWidget(parent),
@@ -26,12 +30,27 @@ MainPage::MainPage(QWidget *parent) :
     ui->musicShowList->addItems(musicList->getMusicNameList());
 
     trayIconInit();
-    startTimer(500);
+    timerID = startTimer(UpdateTimerTime);
 
     if(!shortcutInit())
     {
         QMessageBox::information(nullptr,"Infomation",QString::fromLocal8Bit("热键被占用!"));
     }
+    this->setWindowFlags(Qt::FramelessWindowHint);
+    QBitmap bmp(this->size());
+    bmp.fill();
+    QPainter p(&bmp);
+    p.setPen(Qt::NoPen);
+    p.setBrush(Qt::black);
+    p.drawRoundedRect(bmp.rect(),15,15);
+    setMask(bmp);
+    ui->musicShowList->setFrameShape(QListWidget::NoFrame);
+    exitBtn = new QPushButton(ui->head);
+    exitBtn->setFixedSize(20,20);
+    exitBtn->setStyleSheet("QPushButton{border-image: url(:/images/close_normal.png);background-color: rgb(245, 245, 245);}"
+                           "QPushButton:hover{border-image: url(:/images/close_hover.png);background-color: rgb(250, 0, 0);}"
+                           "QPushButton:pressed{border-image: url(:/images/close_press.png);background-color: rgb(250, 174, 189);}");
+    connect(exitBtn,SIGNAL(clicked()),this,SLOT(exitBtnClickedSlot()));
 }
 
 MainPage::~MainPage()
@@ -42,8 +61,6 @@ MainPage::~MainPage()
 
 void MainPage::timerEvent(QTimerEvent *)
 {
-    if (posIsPressed)
-        return;
     FQFDemuxThread::MusicType s = dt->getMusicStatus();
     if(s == FQFDemuxThread::End)
     {
@@ -75,6 +92,44 @@ void MainPage::timerEvent(QTimerEvent *)
             .arg((total - (total/3600)*3600)/60, 2, 10, QLatin1Char('0'))
             .arg(total%60, 2, 10, QLatin1Char('0'));
     ui->musicTime->setText(sPts + "/" + sTotal);
+}
+
+void MainPage::paintEvent(QPaintEvent *)
+{
+    QPainter p(this);
+    p.setPen(Qt::SolidLine);
+    p.drawRoundedRect(ui->musicShowList->x()-5,ui->musicShowList->y()-5,
+                      ui->musicShowList->width()+10,ui->musicShowList->height()+10
+                      ,15,15);
+    p.setPen(Qt::NoPen);
+    p.setBrush(Qt::gray);
+    p.drawRoundedRect(0,0,
+                      width(),44
+                      ,0,0);
+    QPixmap pix(":/images/logo_player1.png");
+    p.drawPixmap(7,5,110,30,pix);
+    exitBtn->move(ui->head->width() - 20,0);
+}
+
+void MainPage::mousePressEvent(QMouseEvent *event)
+{
+    killTimer(timerID);
+    oldPos = event->pos();
+    if(event->x() < 350 && event->y() < 30)
+        isMove = true;
+}
+
+void MainPage::mouseReleaseEvent(QMouseEvent *event)
+{
+    Q_UNUSED(event);
+    timerID = startTimer(UpdateTimerTime);
+    isMove = false;
+}
+
+void MainPage::mouseMoveEvent(QMouseEvent *event)
+{
+    if(isMove)
+        this->move(event->pos() - oldPos + this->pos());
 }
 
 void MainPage::playNext()
@@ -224,6 +279,19 @@ void MainPage::trayIconActivatedSlot(QSystemTrayIcon::ActivationReason reason)
     }
 }
 
+void MainPage::exitBtnClickedSlot()
+{
+#ifdef _WIN32
+    this->hide();
+    if(trayIcon) trayIcon->showMessage(QString::fromLocal8Bit("提示"),
+                                       QString::fromLocal8Bit("播放器已隐藏，双击托盘图标恢复"),
+                                       QIcon(":/images/logo_player2.png"));
+#else
+    this->hide();
+    QApplication::exit(0);
+#endif
+}
+
 void MainPage::closeEvent(QCloseEvent *event)
 {
 #ifdef _WIN32
@@ -286,15 +354,15 @@ void MainPage::on_btnSet_clicked()
 
 void MainPage::on_playProgressBar_sliderPressed()
 {
-    posIsPressed = true;
+    killTimer(timerID);
 }
 
 void MainPage::on_playProgressBar_sliderReleased()
 {
-    posIsPressed = false;
     double pos = 0.0;
     pos = static_cast<double>(ui->playProgressBar->value()) / static_cast<double>(ui->playProgressBar->maximum());
     dt->seek(pos);
+    timerID = startTimer(UpdateTimerTime);
 }
 
 void MainPage::on_musicShowList_doubleClicked(const QModelIndex &index)

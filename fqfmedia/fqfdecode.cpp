@@ -1,10 +1,11 @@
 ﻿#include "fqfdecode.h"
+#include <iostream>
+#include <QDebug>
 extern "C"
 {
 #include <libavcodec/avcodec.h>
 }
-#include <iostream>
-#include <QDebug>
+
 using namespace std;
 
 void FQFFreeFrame(AVFrame **frame)
@@ -18,14 +19,10 @@ void FQFFreePacket(AVPacket **pkt)
 	av_packet_free(pkt);
 }
 
-FQFDecode::FQFDecode()
-{
-}
+FQFDecode::FQFDecode(){}
 
 
-FQFDecode::~FQFDecode()
-{
-}
+FQFDecode::~FQFDecode(){}
 
 bool FQFDecode::openDecode(AVCodecParameters * para)
 {
@@ -59,17 +56,12 @@ bool FQFDecode::openDecode(AVCodecParameters * para)
 		return false;
 	}
 	mux.unlock();
-	
 	return true;
 }
 
 bool FQFDecode::sendPacketToDecode(AVPacket * pkt)
 {
-
-    if (!pkt || pkt->size <= 0 || !pkt->data)
-    {
-		return false;
-    }
+    if (!pkt || pkt->size <= 0 || !pkt->data) return false;
 	mux.lock();
 	if (!codec)
 	{
@@ -80,8 +72,7 @@ bool FQFDecode::sendPacketToDecode(AVPacket * pkt)
 	int re = avcodec_send_packet(codec, pkt);
 	mux.unlock();
 	av_packet_free(&pkt);
-	if (re != 0)return false;
-    return true;
+    return re == 0 ? true : false;
 }
 
 bool FQFDecode::sendNullptrToDecode()
@@ -94,8 +85,7 @@ bool FQFDecode::sendNullptrToDecode()
     }
     int re = avcodec_send_packet(codec, nullptr);
     mux.unlock();
-    if (re != 0)return false;
-    return true;
+    return re == 0 ? true : false;
 }
 
 AVFrame * FQFDecode::recvFrameFromDecode()
@@ -139,8 +129,7 @@ void FQFDecode::clear()
 {
 	mux.lock();
 	//清理解码缓冲
-	if (codec)
-		avcodec_flush_buffers(codec);
+    if (codec) avcodec_flush_buffers(codec);
 	mux.unlock();
 }
 
