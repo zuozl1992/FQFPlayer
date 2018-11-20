@@ -2,8 +2,6 @@
 #include "ui_mainpage.h"
 #include <QFileDialog>
 #include <QString>
-#include "fqfdemuxthread.h"
-#include "qxtglobalshortcut/qxtglobalshortcut.h"
 #include <QDebug>
 #include <QAction>
 #include <QApplication>
@@ -11,6 +9,11 @@
 #include <QMessageBox>
 #include <QPainter>
 #include <QBitmap>
+#include <QPushButton>
+#include <QMenu>
+#include <QPixmap>
+#include "fqfdemuxthread.h"
+#include "qxtglobalshortcut/qxtglobalshortcut.h"
 
 #define UpdateTimerTime 1000
 
@@ -19,11 +22,17 @@ MainPage::MainPage(QWidget *parent) :
     ui(new Ui::MainPage)
 {
     ui->setupUi(this);
+
+
     musicList = new MusicList;
     dt = new FQFDemuxThread();
 
     this->setWindowTitle("FQFPlayer");
     this->setWindowIcon(QIcon(":/images/logo.png"));
+    this->setWindowFlags(Qt::FramelessWindowHint |
+                         Qt::WindowSystemMenuHint |
+                         Qt::WindowMinimizeButtonHint);
+    this->setFixedSize(350,720);
 
     ui->musicShowList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->musicShowList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -36,7 +45,7 @@ MainPage::MainPage(QWidget *parent) :
     {
         QMessageBox::information(nullptr,"Infomation",QString::fromLocal8Bit("热键被占用!"));
     }
-    this->setWindowFlags(Qt::FramelessWindowHint);
+
     QBitmap bmp(this->size());
     bmp.fill();
     QPainter p(&bmp);
@@ -102,7 +111,7 @@ void MainPage::paintEvent(QPaintEvent *)
                       ui->musicShowList->width()+10,ui->musicShowList->height()+10
                       ,15,15);
     p.setPen(Qt::NoPen);
-    p.setBrush(Qt::gray);
+    p.setBrush(Qt::lightGray);
     p.drawRoundedRect(0,0,
                       width(),44
                       ,0,0);
@@ -339,7 +348,13 @@ void MainPage::on_btnPrev_clicked()
 
 void MainPage::on_btnPlayPause_clicked()
 {
-    playPause();
+    if(ui->musicShowList->currentRow() == -1)
+    {
+        ui->musicShowList->setCurrentRow(0);
+        openCurrentedMusic();
+    }
+    else
+        playPause();
 }
 
 void MainPage::on_btnNext_clicked()

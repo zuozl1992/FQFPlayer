@@ -6,20 +6,17 @@ DESTDIR = ../bin/win32
 
 include(fqfmedia/fqfmedia.pri)
 include(qxtglobalshortcut/qxtglobalshortcut.pri)
+include(component/component.pri)
 
 FORMS += \
     mainpage.ui
 
 HEADERS += \
-    myslider.h \
-    mainpage.h \
-    musiclist.h
+    mainpage.h
 
 SOURCES += \
     main.cpp \
-    myslider.cpp \
-    mainpage.cpp \
-    musiclist.cpp
+    mainpage.cpp
 
 RESOURCES += \
     images.qrc

@@ -2,17 +2,17 @@
 #define FORM_H
 
 #include <QWidget>
-#include <QMenu>
-#include <QPixmap>
-#include <QPushButton>
-
 #ifdef _WIN32
 #include <QSystemTrayIcon>
 #endif
+#include "musiclist.h"
 
 class FQFDemuxThread;
 class QxtGlobalShortcut;
-#include "musiclist.h"
+class QPushButton;
+class QMenu;
+
+
 namespace Ui {
 class MainPage;
 }
@@ -27,21 +27,13 @@ public:
 
 private slots:
     void on_btnAddMusic_clicked();
-
     void on_btnPrev_clicked();
-
     void on_btnPlayPause_clicked();
-
     void on_btnNext_clicked();
-
     void on_btnSet_clicked();
-
     void on_playProgressBar_sliderPressed();
-
     void on_playProgressBar_sliderReleased();
-
     void on_musicShowList_doubleClicked(const QModelIndex &index);
-
     void on_btnPlayModel_clicked();
 
 protected slots:
@@ -79,7 +71,6 @@ protected:
     QAction *playPauseAction;
     QAction *exitAction;
     MusicList::PlayType playType = MusicList::Order;
-    QPixmap pix;
     int timerID = 0;
     QPoint oldPos;
     QPushButton *exitBtn;
