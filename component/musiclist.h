@@ -2,6 +2,7 @@
 #define MUSICLIST_H
 
 #include <QObject>
+#include "myset.h"
 
 class QSqlDatabase;
 class MusicList : public QObject
@@ -26,7 +27,7 @@ public:
     void save();
 
 protected:
-    bool checkPathType(const QString &path);
+    inline bool checkPathType(const QString &path);
     void initDatabase();
     void clearDatabase();
     void reloadList();
@@ -34,7 +35,6 @@ protected:
     QStringList musicPathList;
     int index = 0;
     QSqlDatabase *db;
-
 };
 
 #endif // MUSICLIST_H

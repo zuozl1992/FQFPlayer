@@ -327,9 +327,13 @@ void MainPage::exitBtnClickedSlot()
     }
 #ifdef _WIN32
     this->hide();
-    if(trayIcon) trayIcon->showMessage(QString::fromLocal8Bit("提示"),
-                                       QString::fromLocal8Bit("播放器已隐藏，双击托盘图标恢复"),
-                                       QIcon(":/images/logo_player2.png"));
+    if(isFirstInfo)
+    {
+        if(trayIcon) trayIcon->showMessage(QString::fromLocal8Bit("提示"),
+                                        QString::fromLocal8Bit("播放器已隐藏，双击托盘图标恢复。\n可在设置中修改"),
+                                        QIcon(":/images/logo_player2.png"));
+        isFirstInfo = false;
+    }
 #else
     exitApp();
 #endif
@@ -345,9 +349,13 @@ void MainPage::closeEvent(QCloseEvent *event)
 #ifdef _WIN32
     event->ignore();
     this->hide();
-    if(trayIcon) trayIcon->showMessage(QString::fromLocal8Bit("提示"),
-                                       QString::fromLocal8Bit("播放器已隐藏，双击托盘图标恢复"),
-                                       QIcon(":/images/logo_player2.png"));
+    if(isFirstInfo)
+    {
+        if(trayIcon) trayIcon->showMessage(QString::fromLocal8Bit("提示"),
+                                        QString::fromLocal8Bit("播放器已隐藏，双击托盘图标恢复。\n可在设置中修改"),
+                                        QIcon(":/images/logo_player2.png"));
+        isFirstInfo = false;
+    }
 #endif
 }
 
@@ -357,9 +365,13 @@ void MainPage::changeEvent(QEvent *event)
 #ifdef _WIN32
         if(windowState() & Qt::WindowMinimized){
             hide();
-            if(trayIcon) trayIcon->showMessage(QString::fromLocal8Bit("提示"),
-                                               QString::fromLocal8Bit("播放器已隐藏，双击托盘图标恢复"),
-                                               QIcon(":/images/logo_player2.png"));
+            if(isFirstInfo)
+            {
+                if(trayIcon) trayIcon->showMessage(QString::fromLocal8Bit("提示"),
+                                                QString::fromLocal8Bit("播放器已隐藏，双击托盘图标恢复。\n可在设置中修改"),
+                                                QIcon(":/images/logo_player2.png"));
+                isFirstInfo = false;
+            }
         }
 #endif
     }

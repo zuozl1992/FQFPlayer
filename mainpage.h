@@ -79,6 +79,7 @@ protected:
     QPushButton *exitBtn;
     bool isMove = false;
     int exitType = 0;
+    bool isFirstInfo = true;
 
 #ifdef _WIN32
     QSystemTrayIcon *trayIcon;

@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QSqlQuery>
 #include <QTime>
+#include <QSet>
 
 #define DATABASEFILE "musiclist.db"
 
@@ -21,6 +22,7 @@ bool MusicList::addMusicToList(const QString &path)
 {
     if(!checkPathType(path))
         return false;
+
     musicPathList.append(path);
     save();
     return true;
@@ -28,7 +30,7 @@ bool MusicList::addMusicToList(const QString &path)
 
 void MusicList::addMusicsToList(const QStringList &paths)
 {
-    for(int i = 0; i < paths.length(); i++)
+    for(int i = 0; i < paths.size(); i++)
     {
         if(!checkPathType(paths.at(i)))
             continue;
@@ -47,7 +49,7 @@ QStringList MusicList::getMusicNameList()
     if(musicPathList.isEmpty())
         return QStringList();
     QStringList list;
-    for(int i = 0; i < musicPathList.length(); i++)
+    for(int i = 0; i < musicPathList.size(); i++)
     {
         QString path = musicPathList.at(i);
         int first = path.lastIndexOf ("/");
@@ -63,13 +65,13 @@ QString MusicList::getNextMusicPath(MusicList::PlayType type)
         return QString();
     switch (type) {
     case MusicList::Order:
-        if(index < musicPathList.length()-1)
+        if(index < musicPathList.size()-1)
             index++;
         else
             index = 0;
         break;
     case MusicList::Stochastic:
-        index = qrand() % musicPathList.length();
+        index = qrand() % musicPathList.size();
         break;
     case MusicList::SingleCycle:
         break;
@@ -86,10 +88,10 @@ QString MusicList::getPrevMusicPath(MusicList::PlayType type)
         if(index > 0)
             index--;
         else
-            index = musicPathList.length() - 1;
+            index = musicPathList.size() - 1;
         break;
     case MusicList::Stochastic:
-        index = qrand() % musicPathList.length();
+        index = qrand() % musicPathList.size();
         break;
     case MusicList::SingleCycle:
         break;
@@ -101,7 +103,7 @@ QString MusicList::getIndexMusicPath(int index)
 {
     if(index < 0)
         return QString();
-    if(index >= musicPathList.length())
+    if(index >= musicPathList.size())
         return QString();
     this->index = index;
     return musicPathList.at(index);
@@ -126,11 +128,13 @@ void MusicList::save()
 {
     clearDatabase();
     db->open();
-    for(int i=0; i < musicPathList.length(); i++)
+    db->transaction();
+    for(int i=0; i < musicPathList.size(); i++)
     {
         QSqlQuery query(*db);
         query.exec(tr("INSERT INTO `t_musiclist` VALUES('%1');").arg(musicPathList.at(i)));
     }
+    db->commit();
     db->close();
 }
 
@@ -143,7 +147,7 @@ bool MusicList::checkPathType(const QString &path)
     if(!(type == "mp3" || type == "flac" || type == "wav" || type == "ape"))
         return false;
 
-    for(int i = 0; i < musicPathList.length(); i++)
+    for(int i = 0; i < musicPathList.size(); i++)
     {
         if(musicPathList.at(i) == path)
             return false;
