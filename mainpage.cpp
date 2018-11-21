@@ -14,6 +14,8 @@
 #include <QPixmap>
 #include "fqfdemuxthread.h"
 #include "qxtglobalshortcut/qxtglobalshortcut.h"
+#include "optionpage.h"
+#include "myoption.h"
 
 #define UpdateTimerTime 1000
 
@@ -22,7 +24,6 @@ MainPage::MainPage(QWidget *parent) :
     ui(new Ui::MainPage)
 {
     ui->setupUi(this);
-
 
     musicList = new MusicList;
     dt = new FQFDemuxThread();
@@ -60,6 +61,11 @@ MainPage::MainPage(QWidget *parent) :
                            "QPushButton:hover{border-image: url(:/images/close_hover.png);background-color: rgb(250, 0, 0);}"
                            "QPushButton:pressed{border-image: url(:/images/close_press.png);background-color: rgb(250, 174, 189);}");
     connect(exitBtn,SIGNAL(clicked()),this,SLOT(exitBtnClickedSlot()));
+    OptionPage::getWidget();
+    exitType = MyOption::getObject()->getExitType();
+    playTypeInit();
+    connect(OptionPage::getWidget(),SIGNAL(exitTypeChange()),
+            this,SLOT(exitTypeChangeSlot()));
 }
 
 MainPage::~MainPage()
@@ -116,7 +122,8 @@ void MainPage::paintEvent(QPaintEvent *)
                       width(),44
                       ,0,0);
     QPixmap pix(":/images/logo_player1.png");
-    p.drawPixmap(7,5,110,30,pix);
+    p.drawPixmap(90,0,165,43,pix);
+
     exitBtn->move(ui->head->width() - 20,0);
 }
 
@@ -158,6 +165,13 @@ void MainPage::playPause()
     bool s = dt->getMusicStatus() == FQFDemuxThread::Pause ? false : true;
     dt->setPause(s);
     ui->btnPlayPause->setText(s ? QString::fromLocal8Bit("播放") : QString::fromLocal8Bit("暂停"));
+}
+
+void MainPage::exitApp()
+{
+    this->hide();
+    OptionPage::getWidget()->hide();
+    QApplication::exit(0);
 }
 
 void MainPage::openCurrentedMusic()
@@ -230,6 +244,23 @@ bool MainPage::shortcutInit()
     return ok;
 }
 
+void MainPage::playTypeInit()
+{
+    int type = MyOption::getObject()->getPlayType();
+    this->playType = static_cast<MusicList::PlayType>(type);
+    switch (type) {
+    case 0:
+        ui->btnPlayModel->setText(QString::fromLocal8Bit("顺序播放"));
+        break;
+    case 1:
+        ui->btnPlayModel->setText(QString::fromLocal8Bit("随机播放"));
+        break;
+    case 2:
+        ui->btnPlayModel->setText(QString::fromLocal8Bit("单曲循环"));
+        break;
+    }
+}
+
 void MainPage::cutActivatedSlot(QxtGlobalShortcut *cut)
 {
     if(cutOnActivated)
@@ -267,8 +298,7 @@ void MainPage::actionTriggeredlot(bool checked)
     }
     else if(act == exitAction)
     {
-        this->hide();
-        QApplication::exit(0);
+        exitApp();
     }
 }
 
@@ -290,15 +320,24 @@ void MainPage::trayIconActivatedSlot(QSystemTrayIcon::ActivationReason reason)
 
 void MainPage::exitBtnClickedSlot()
 {
+    if(exitType != 0)
+    {
+        exitApp();
+        return;
+    }
 #ifdef _WIN32
     this->hide();
     if(trayIcon) trayIcon->showMessage(QString::fromLocal8Bit("提示"),
                                        QString::fromLocal8Bit("播放器已隐藏，双击托盘图标恢复"),
                                        QIcon(":/images/logo_player2.png"));
 #else
-    this->hide();
-    QApplication::exit(0);
+    exitApp();
 #endif
+}
+
+void MainPage::exitTypeChangeSlot()
+{
+    exitType = MyOption::getObject()->getExitType();
 }
 
 void MainPage::closeEvent(QCloseEvent *event)
@@ -321,7 +360,6 @@ void MainPage::changeEvent(QEvent *event)
             if(trayIcon) trayIcon->showMessage(QString::fromLocal8Bit("提示"),
                                                QString::fromLocal8Bit("播放器已隐藏，双击托盘图标恢复"),
                                                QIcon(":/images/logo_player2.png"));
-
         }
 #endif
     }
@@ -364,7 +402,7 @@ void MainPage::on_btnNext_clicked()
 
 void MainPage::on_btnSet_clicked()
 {
-
+    OptionPage::getWidget()->show();
 }
 
 void MainPage::on_playProgressBar_sliderPressed()
@@ -403,4 +441,5 @@ void MainPage::on_btnPlayModel_clicked()
         playType = MusicList::Order;
         ui->btnPlayModel->setText(QString::fromLocal8Bit("顺序播放"));
     }
+    MyOption::getObject()->setPlayType(static_cast<int>(playType));
 }

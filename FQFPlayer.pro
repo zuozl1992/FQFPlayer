@@ -9,14 +9,17 @@ include(qxtglobalshortcut/qxtglobalshortcut.pri)
 include(component/component.pri)
 
 FORMS += \
-    mainpage.ui
+    mainpage.ui \
+    optionpage.ui
 
 HEADERS += \
-    mainpage.h
+    mainpage.h \
+    optionpage.h
 
 SOURCES += \
     main.cpp \
-    mainpage.cpp
+    mainpage.cpp \
+    optionpage.cpp
 
 RESOURCES += \
     images.qrc

@@ -128,7 +128,7 @@ void MusicList::save()
     db->open();
     for(int i=0; i < musicPathList.length(); i++)
     {
-        QSqlQuery query;
+        QSqlQuery query(*db);
         query.exec(tr("INSERT INTO `t_musiclist` VALUES('%1');").arg(musicPathList.at(i)));
     }
     db->close();
@@ -136,6 +136,8 @@ void MusicList::save()
 
 bool MusicList::checkPathType(const QString &path)
 {
+    if(!QFile(DATABASEFILE).exists())
+        return false;
     int first = path.lastIndexOf (".");
     QString type = path.right (path.length ()-first-1);
     if(!(type == "mp3" || type == "flac" || type == "wav" || type == "ape"))
@@ -154,7 +156,7 @@ void MusicList::initDatabase()
     if(QFile(DATABASEFILE).exists())
         return;
     db->open();
-    QSqlQuery query;
+    QSqlQuery query(*db);
     query.exec("CREATE TABLE IF NOT EXISTS `t_musiclist` ("
                "`Path` varchar(100) NOT NULL,"
                "PRIMARY KEY (`Path`)"
@@ -165,7 +167,7 @@ void MusicList::initDatabase()
 void MusicList::clearDatabase()
 {
     db->open();
-    QSqlQuery query;
+    QSqlQuery query(*db);
     query.exec("DELETE FROM `t_musiclist`;");
     db->close();
 }
@@ -174,11 +176,14 @@ void MusicList::reloadList()
 {
     musicPathList.clear();
     db->open();
-    QSqlQuery query;
+    QSqlQuery query(*db);
     query.exec("SELECT * FROM `t_musiclist`;");
     while(query.next())
     {
-        musicPathList.append(query.value(0).toString());
+        QString path = query.value(0).toString();
+        if(checkPathType(path))
+            musicPathList.append(path);
     }
     db->close();
+    save();
 }

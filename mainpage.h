@@ -41,6 +41,7 @@ protected slots:
     void actionTriggeredlot(bool checked);
     void trayIconActivatedSlot(QSystemTrayIcon::ActivationReason reason);
     void exitBtnClickedSlot();
+    void exitTypeChangeSlot();
 
 protected:
     void closeEvent(QCloseEvent *);
@@ -53,10 +54,12 @@ protected:
     void playNext();
     void playPrev();
     void playPause();
+    void exitApp();
     void openCurrentedMusic();
     bool open(const QString &path);
     void trayIconInit();
     bool shortcutInit();
+    void playTypeInit();
 
     int nowIndex = 0;
     FQFDemuxThread *dt;
@@ -75,6 +78,7 @@ protected:
     QPoint oldPos;
     QPushButton *exitBtn;
     bool isMove = false;
+    int exitType = 0;
 
 #ifdef _WIN32
     QSystemTrayIcon *trayIcon;

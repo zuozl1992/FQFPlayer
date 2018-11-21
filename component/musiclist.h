@@ -9,9 +9,9 @@ class MusicList : public QObject
     Q_OBJECT
 public:
     enum PlayType{
-        Order,          //顺序
-        Stochastic,     //随机
-        SingleCycle     //单曲循环
+        Order = 0,          //顺序
+        Stochastic,         //随机
+        SingleCycle         //单曲循环
     };
     explicit MusicList(QObject *parent = nullptr);
     bool addMusicToList(const QString &path);
