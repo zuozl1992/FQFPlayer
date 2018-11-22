@@ -12,12 +12,13 @@
 #include <QPushButton>
 #include <QMenu>
 #include <QPixmap>
+#include <QTimer>
 #include "fqfdemuxthread.h"
 #include "qxtglobalshortcut/qxtglobalshortcut.h"
 #include "optionpage.h"
 #include "myoption.h"
 
-#define UpdateTimerTime 1000
+#define UpdateTimerTime 500
 
 MainPage::MainPage(QWidget *parent) :
     QWidget(parent),
@@ -25,88 +26,38 @@ MainPage::MainPage(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    //播放列表实例化
     musicList = new MusicList;
+    //播放线程实例化
     dt = new FQFDemuxThread();
-
-    this->setWindowTitle("FQFPlayer");
-    this->setWindowIcon(QIcon(":/images/logo.png"));
-    this->setWindowFlags(Qt::FramelessWindowHint |
-                         Qt::WindowSystemMenuHint |
-                         Qt::WindowMinimizeButtonHint);
-    this->setFixedSize(350,720);
-
-    ui->musicShowList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->musicShowList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->musicShowList->addItems(musicList->getMusicNameList());
-
+    //程序信息修改
+    windowsInfoInit();
+    //界面歌曲列表初始化
+    musicInit();
+    //托盘图标初始化
     trayIconInit();
-    timerID = startTimer(UpdateTimerTime);
-
-    if(!shortcutInit())
-    {
-        QMessageBox::information(nullptr,"Infomation",QString::fromLocal8Bit("热键被占用!"));
-    }
-
-    QBitmap bmp(this->size());
-    bmp.fill();
-    QPainter p(&bmp);
-    p.setPen(Qt::NoPen);
-    p.setBrush(Qt::black);
-    p.drawRoundedRect(bmp.rect(),15,15);
-    setMask(bmp);
-    ui->musicShowList->setFrameShape(QListWidget::NoFrame);
-    exitBtn = new QPushButton(ui->head);
-    exitBtn->setFixedSize(20,20);
-    exitBtn->setStyleSheet("QPushButton{border-image: url(:/images/close_normal.png);background-color: rgb(245, 245, 245);}"
-                           "QPushButton:hover{border-image: url(:/images/close_hover.png);background-color: rgb(250, 0, 0);}"
-                           "QPushButton:pressed{border-image: url(:/images/close_press.png);background-color: rgb(250, 174, 189);}");
-    connect(exitBtn,SIGNAL(clicked()),this,SLOT(exitBtnClickedSlot()));
-    OptionPage::getWidget();
-    exitType = MyOption::getObject()->getExitType();
-    playTypeInit();
-    connect(OptionPage::getWidget(),SIGNAL(exitTypeChange()),
-            this,SLOT(exitTypeChangeSlot()));
+    //热键初始化
+    shortcutInit();
+    //当前界面圆角
+    widgetRound();
+    //退出按钮
+    exitBtnInit();
+    //设置页面初始化
+    optionInit();
+    //历史设置加载
+    historyLoading();
+    //启动定时器
+//    timerID = startTimer(UpdateTimerTime);
+    updateTimer = new QTimer;
+    connect(updateTimer,SIGNAL(timeout()),
+            this,SLOT(updateTimerTimeoutSlot()));
+    updateTimer->start(UpdateTimerTime);
 }
 
 MainPage::~MainPage()
 {
     dt->closeFile();
     delete ui;
-}
-
-void MainPage::timerEvent(QTimerEvent *)
-{
-    FQFDemuxThread::MusicType s = dt->getMusicStatus();
-    if(s == FQFDemuxThread::End)
-    {
-        playNext();
-        return;
-    }
-    long long total = dt->getFileTimeMs();
-    long long pts = dt->getNowTimeMs();
-    if (total > 0)
-    {
-        double pos = static_cast<double>(pts) / static_cast<double>(total);
-        int v = static_cast<int>(ui->playProgressBar->maximum() * pos);
-        ui->playProgressBar->setValue(v);
-    }
-
-    //按键去抖动
-    if(cutOnActivated)
-        cutOnActivated = false;
-
-    //刷新时间
-    pts /= 1000;
-    total /= 1000;
-    QString sPts = tr("%1:%2:%3")
-            .arg(pts/3600, 2, 10, QLatin1Char('0'))
-            .arg((pts - (pts/3600)*3600)/60, 2, 10, QLatin1Char('0'))
-            .arg(pts%60, 2, 10, QLatin1Char('0'));
-    QString sTotal = tr("%1:%2:%3")
-            .arg(total/3600, 2, 10, QLatin1Char('0'))
-            .arg((total - (total/3600)*3600)/60, 2, 10, QLatin1Char('0'))
-            .arg(total%60, 2, 10, QLatin1Char('0'));
-    ui->musicTime->setText(sPts + "/" + sTotal);
 }
 
 void MainPage::paintEvent(QPaintEvent *)
@@ -129,7 +80,7 @@ void MainPage::paintEvent(QPaintEvent *)
 
 void MainPage::mousePressEvent(QMouseEvent *event)
 {
-    killTimer(timerID);
+    updateTimer->stop();
     oldPos = event->pos();
     if(event->x() < 350 && event->y() < 30)
         isMove = true;
@@ -138,7 +89,7 @@ void MainPage::mousePressEvent(QMouseEvent *event)
 void MainPage::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_UNUSED(event);
-    timerID = startTimer(UpdateTimerTime);
+    updateTimer->start(UpdateTimerTime);
     isMove = false;
 }
 
@@ -176,8 +127,8 @@ void MainPage::exitApp()
 
 void MainPage::openCurrentedMusic()
 {
-    nowIndex = ui->musicShowList->currentRow();
-    open(musicList->getIndexMusicPath(nowIndex));
+    int index = ui->musicShowList->currentRow();
+    open(musicList->getIndexMusicPath(index));
 }
 
 bool MainPage::open(const QString &path)
@@ -227,7 +178,7 @@ void MainPage::trayIconInit()
 
 }
 
-bool MainPage::shortcutInit()
+void MainPage::shortcutInit()
 {
     //全局热键
     nextCut = new QxtGlobalShortcut(QKeySequence(Qt::Key_MediaNext),this);
@@ -236,12 +187,30 @@ bool MainPage::shortcutInit()
     connect(prevCut, SIGNAL(activated(QxtGlobalShortcut *)), this, SLOT(cutActivatedSlot(QxtGlobalShortcut *)));
     playPauseCut = new QxtGlobalShortcut(QKeySequence(Qt::Key_MediaPlay),this);
     connect(playPauseCut, SIGNAL(activated(QxtGlobalShortcut *)), this, SLOT(cutActivatedSlot(QxtGlobalShortcut *)));
+    QString info;
+    info.clear();
     bool ok = nextCut->isValid();
+    if(!ok)
+        info.append(QString::fromLocal8Bit("下一首"));
     if(!prevCut->isValid())
+    {
         ok = false;
+        if(!info.isEmpty())
+            info.append(QString::fromLocal8Bit("、"));
+        info.append(QString::fromLocal8Bit("上一首"));
+    }
     if(!playPauseCut->isValid())
+    {
         ok = false;
-    return ok;
+        if(!info.isEmpty())
+            info.append(QString::fromLocal8Bit("、"));
+        info.append(QString::fromLocal8Bit("播放/暂停"));
+    }
+    if(!ok)
+    {
+        info.append(QString::fromLocal8Bit(" 热键被占用！"));
+        QMessageBox::information(nullptr,"Infomation", info);
+    }
 }
 
 void MainPage::playTypeInit()
@@ -259,6 +228,63 @@ void MainPage::playTypeInit()
         ui->btnPlayModel->setText(QString::fromLocal8Bit("单曲循环"));
         break;
     }
+}
+
+void MainPage::historyLoading()
+{
+    //退出模式初始化
+    exitType = MyOption::getObject()->getExitType();
+    //播放模式初始化
+    playTypeInit();
+}
+
+void MainPage::exitBtnInit()
+{
+    exitBtn = new QPushButton(ui->head);
+    exitBtn->setFixedSize(20,20);
+    exitBtn->setStyleSheet("QPushButton{border-image: url(:/images/close_normal.png);background-color: rgb(245, 245, 245);}"
+                           "QPushButton:hover{border-image: url(:/images/close_hover.png);background-color: rgb(250, 0, 0);}"
+                           "QPushButton:pressed{border-image: url(:/images/close_press.png);background-color: rgb(250, 174, 189);}");
+    connect(exitBtn,SIGNAL(clicked()),this,SLOT(exitBtnClickedSlot()));
+}
+
+void MainPage::widgetRound()
+{
+    QBitmap bmp(this->size());
+    bmp.fill();
+    QPainter p(&bmp);
+    p.setPen(Qt::NoPen);
+    p.setBrush(Qt::black);
+    p.drawRoundedRect(bmp.rect(),15,15);
+    setMask(bmp);
+}
+
+void MainPage::musicInit()
+{
+    //界面歌曲列表去除进度条
+    ui->musicShowList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->musicShowList->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    //添加歌曲到列表
+    ui->musicShowList->addItems(musicList->getMusicNameList());
+    //列表无边框
+    ui->musicShowList->setFrameShape(QListWidget::NoFrame);
+}
+
+void MainPage::optionInit()
+{
+    OptionPage::getWidget();
+    connect(OptionPage::getWidget(),SIGNAL(exitTypeChange()),
+            this,SLOT(exitTypeChangeSlot()));
+}
+
+void MainPage::windowsInfoInit()
+{
+    this->setWindowTitle("FQFPlayer");
+    this->setWindowIcon(QIcon(":/images/logo.png"));
+    this->setWindowFlags(Qt::FramelessWindowHint |
+                         Qt::WindowSystemMenuHint |
+                         Qt::WindowMinimizeButtonHint);
+    this->setFixedSize(350,720);
 }
 
 void MainPage::cutActivatedSlot(QxtGlobalShortcut *cut)
@@ -344,6 +370,43 @@ void MainPage::exitTypeChangeSlot()
     exitType = MyOption::getObject()->getExitType();
 }
 
+void MainPage::updateTimerTimeoutSlot()
+{
+    //当前歌曲是否播放结束
+    FQFDemuxThread::MusicType s = dt->getMusicStatus();
+    if(s == FQFDemuxThread::End)
+    {
+        playNext();
+        return;
+    }
+    //进度条计算
+    long long total = dt->getFileTimeMs();
+    long long pts = dt->getNowTimeMs();
+    if (total > 0)
+    {
+        double pos = static_cast<double>(pts) / static_cast<double>(total);
+        int v = static_cast<int>(ui->playProgressBar->maximum() * pos);
+        ui->playProgressBar->setValue(v);
+    }
+
+    //按键去抖动
+    if(cutOnActivated)
+        cutOnActivated = false;
+
+    //刷新时间
+    pts /= 1000;
+    total /= 1000;
+    QString sPts = tr("%1:%2:%3")
+            .arg(pts/3600, 2, 10, QLatin1Char('0'))
+            .arg((pts - (pts/3600)*3600)/60, 2, 10, QLatin1Char('0'))
+            .arg(pts%60, 2, 10, QLatin1Char('0'));
+    QString sTotal = tr("%1:%2:%3")
+            .arg(total/3600, 2, 10, QLatin1Char('0'))
+            .arg((total - (total/3600)*3600)/60, 2, 10, QLatin1Char('0'))
+            .arg(total%60, 2, 10, QLatin1Char('0'));
+    ui->musicTime->setText(sPts + "/" + sTotal);
+}
+
 void MainPage::closeEvent(QCloseEvent *event)
 {
 #ifdef _WIN32
@@ -419,7 +482,7 @@ void MainPage::on_btnSet_clicked()
 
 void MainPage::on_playProgressBar_sliderPressed()
 {
-    killTimer(timerID);
+    updateTimer->stop();
 }
 
 void MainPage::on_playProgressBar_sliderReleased()
@@ -427,7 +490,7 @@ void MainPage::on_playProgressBar_sliderReleased()
     double pos = 0.0;
     pos = static_cast<double>(ui->playProgressBar->value()) / static_cast<double>(ui->playProgressBar->maximum());
     dt->seek(pos);
-    timerID = startTimer(UpdateTimerTime);
+    updateTimer->start(UpdateTimerTime);
 }
 
 void MainPage::on_musicShowList_doubleClicked(const QModelIndex &index)
