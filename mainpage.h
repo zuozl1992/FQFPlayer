@@ -56,6 +56,7 @@ protected slots:
     void exitBtnClickedSlot();
     //退出方式改变
     void exitTypeChangeSlot();
+    //刷新定时器槽函数
     void updateTimerTimeoutSlot();
 
 protected:
@@ -91,10 +92,15 @@ protected:
     void playTypeInit();
     //历史记录加载
     void historyLoading();
+    //退出按钮初始化
     void exitBtnInit();
+    //界面圆角
     void widgetRound();
-    void musicInit();
+    //界面歌曲列表初始化
+    void uiMusicListInit();
+    //设置界面初始化
     void optionInit();
+    //程序信息初始化
     void windowsInfoInit();
 
     FQFDemuxThread *dt;             //播放线程
@@ -109,7 +115,6 @@ protected:
     QAction *playPauseAction;       //播放暂停动作
     QAction *exitAction;            //退出动作
     MusicList::PlayType playType = MusicList::Order;    //循环模式
-//    int timerID = 0;                //定时器ID
     QPoint oldPos;                  //移动事件使用
     QPushButton *exitBtn;           //退出按钮
     bool isMove = false;            //用于控制鼠标点击区域，规定区域点击该变量才会为true

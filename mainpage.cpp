@@ -33,7 +33,7 @@ MainPage::MainPage(QWidget *parent) :
     //程序信息修改
     windowsInfoInit();
     //界面歌曲列表初始化
-    musicInit();
+    uiMusicListInit();
     //托盘图标初始化
     trayIconInit();
     //热键初始化
@@ -259,7 +259,7 @@ void MainPage::widgetRound()
     setMask(bmp);
 }
 
-void MainPage::musicInit()
+void MainPage::uiMusicListInit()
 {
     //界面歌曲列表去除进度条
     ui->musicShowList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

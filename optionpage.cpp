@@ -3,6 +3,7 @@
 #include <QPainter>
 #include <QBitmap>
 #include <QPixmap>
+#include <QMouseEvent>
 #include "myoption.h"
 
 OptionPage::OptionPage(QWidget *parent) :
@@ -55,6 +56,16 @@ void OptionPage::initOption()
         ui->cbExitType->setChecked(false);
     else
         ui->cbExitType->setChecked(true);
+}
+
+void OptionPage::mousePressEvent(QMouseEvent *event)
+{
+    oldPos = event->pos();
+}
+
+void OptionPage::mouseMoveEvent(QMouseEvent *event)
+{
+    this->move(event->pos() - oldPos + this->pos());
 }
 
 void OptionPage::on_btnOk_clicked()

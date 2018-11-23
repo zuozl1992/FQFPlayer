@@ -24,6 +24,12 @@ signals:
 protected:
     void paintEvent(QPaintEvent *);
     void initOption();
+    //鼠标按下事件
+    void mousePressEvent(QMouseEvent *event);
+    //鼠标移动事件
+    void mouseMoveEvent(QMouseEvent *event);
+
+    QPoint oldPos;
 
 private slots:
     void on_btnOk_clicked();
