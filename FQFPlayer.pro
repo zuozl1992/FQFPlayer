@@ -7,6 +7,7 @@ DESTDIR = ../bin/win32
 include(fqfmedia/fqfmedia.pri)
 include(qxtglobalshortcut/qxtglobalshortcut.pri)
 include(component/component.pri)
+include(lrcreader/lrcreader.pri)
 
 FORMS += \
     mainpage.ui \

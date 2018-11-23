@@ -45,6 +45,8 @@ private slots:
     //播放模式点击
     void on_btnPlayModel_clicked();
 
+    void on_btnLrc_clicked();
+
 protected slots:
     //全局热键触发
     void cutActivatedSlot(QxtGlobalShortcut *cut);
@@ -102,6 +104,7 @@ protected:
     void optionInit();
     //程序信息初始化
     void windowsInfoInit();
+    void hideAllPage();
 
     FQFDemuxThread *dt;             //播放线程
     QxtGlobalShortcut *nextCut;     //下一首热键

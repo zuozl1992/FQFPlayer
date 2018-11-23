@@ -17,6 +17,7 @@
 #include "qxtglobalshortcut/qxtglobalshortcut.h"
 #include "optionpage.h"
 #include "myoption.h"
+#include "lrcpage.h"
 
 #define UpdateTimerTime 500
 
@@ -120,8 +121,7 @@ void MainPage::playPause()
 
 void MainPage::exitApp()
 {
-    this->hide();
-    OptionPage::getWidget()->hide();
+    hideAllPage();
     QApplication::exit(0);
 }
 
@@ -139,6 +139,12 @@ bool MainPage::open(const QString &path)
     bool ok = dt->openFile(path.toStdString().c_str());
     ui->btnPlayPause->setText(!ok ? QString::fromLocal8Bit("播放") : QString::fromLocal8Bit("暂停"));
     ui->musicShowList->setEnabled(true);
+    int first = path.lastIndexOf(".");
+    QString lrcPath = path.left(first+1) + "lrc";
+    if(QFile(lrcPath).exists())
+    {
+        LrcPage::getWidget()->loadLrc(lrcPath);
+    }
     return ok;
 }
 
@@ -287,6 +293,13 @@ void MainPage::windowsInfoInit()
     this->setFixedSize(350,720);
 }
 
+void MainPage::hideAllPage()
+{
+    this->hide();
+    OptionPage::getWidget()->hide();
+    LrcPage::getWidget()->hide();
+}
+
 void MainPage::cutActivatedSlot(QxtGlobalShortcut *cut)
 {
     if(cutOnActivated)
@@ -352,7 +365,7 @@ void MainPage::exitBtnClickedSlot()
         return;
     }
 #ifdef _WIN32
-    this->hide();
+    hideAllPage();
     if(isFirstInfo)
     {
         if(trayIcon) trayIcon->showMessage(QString::fromLocal8Bit("提示"),
@@ -382,6 +395,7 @@ void MainPage::updateTimerTimeoutSlot()
     //进度条计算
     long long total = dt->getFileTimeMs();
     long long pts = dt->getNowTimeMs();
+    LrcPage::getWidget()->showLrc(pts);
     if (total > 0)
     {
         double pos = static_cast<double>(pts) / static_cast<double>(total);
@@ -411,7 +425,7 @@ void MainPage::closeEvent(QCloseEvent *event)
 {
 #ifdef _WIN32
     event->ignore();
-    this->hide();
+    hideAllPage();
     if(isFirstInfo)
     {
         if(trayIcon) trayIcon->showMessage(QString::fromLocal8Bit("提示"),
@@ -517,4 +531,15 @@ void MainPage::on_btnPlayModel_clicked()
         ui->btnPlayModel->setText(QString::fromLocal8Bit("顺序播放"));
     }
     MyOption::getObject()->setPlayType(static_cast<int>(playType));
+}
+
+void MainPage::on_btnLrc_clicked()
+{
+    if(LrcPage::getWidget()->isHidden())
+    {
+        LrcPage::getWidget()->showPage();
+        LrcPage::getWidget()->move(this->x() + this->width(), this->y());
+    }
+    else
+        LrcPage::getWidget()->hide();
 }
