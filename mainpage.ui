@@ -62,7 +62,7 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,1,1">
+      <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,1,0,1">
        <item>
         <widget class="QPushButton" name="btnAddMusic">
          <property name="text">
@@ -74,6 +74,13 @@
         <widget class="QPushButton" name="btnSet">
          <property name="text">
           <string>设置</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnLrc">
+         <property name="text">
+          <string>歌词</string>
          </property>
         </widget>
        </item>
