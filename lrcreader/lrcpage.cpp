@@ -122,7 +122,7 @@ bool LrcPage::loadLrc(const QString &path)
     }
     ui->lrcList->clear();
     timeList.clear();
-    int num = 16;
+    int num = 18;
     while(num--)
     {
         QListWidgetItem *i = new QListWidgetItem;
@@ -138,7 +138,7 @@ bool LrcPage::loadLrc(const QString &path)
         timeList.append(list.at(i).toObject().value("time").toInt());
         ui->lrcList->addItem(it);
     }
-    num = 16;
+    num = 18;
     while(num--)
     {
         QListWidgetItem *i = new QListWidgetItem;
@@ -151,7 +151,10 @@ void LrcPage::showLrc(qint64 time)
 {
     if(ui->lrcList->count() <= 0)
         return;
-    ui->lrcList->verticalScrollBar()->setValue(getIndexOfList(time));
+    int index = getIndexOfList(time);
+    if(index == 0)
+        return;
+    ui->lrcList->verticalScrollBar()->setValue(index);
 }
 
 void LrcPage::showPage()

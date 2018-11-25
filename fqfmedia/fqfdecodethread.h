@@ -42,7 +42,7 @@ protected:
 	std::mutex mux;
     DecodeType status = Stop;
     bool isFinishedReading = false;
-    unsigned int maxList = 300;
+    unsigned int maxList = 1000;
     bool isExit = false;
 };
 

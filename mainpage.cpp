@@ -19,7 +19,7 @@
 #include "myoption.h"
 #include "lrcpage.h"
 
-#define UpdateTimerTime 500
+#define UpdateTimerTime 40
 
 MainPage::MainPage(QWidget *parent) :
     QWidget(parent),
