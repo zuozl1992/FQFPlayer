@@ -47,6 +47,8 @@ private slots:
 
     void on_btnLrc_clicked();
 
+    void on_btnClearList_clicked();
+
 protected slots:
     //全局热键触发
     void cutActivatedSlot(QxtGlobalShortcut *cut);

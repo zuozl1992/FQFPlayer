@@ -25,6 +25,7 @@ public:
     int getNowPlayingIndex();
     QString getNowPlayingName();
     void save();
+    void clearList();
 
 protected:
     inline bool checkPathType(const QString &path);

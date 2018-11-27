@@ -122,7 +122,7 @@ bool LrcPage::loadLrc(const QString &path)
     }
     ui->lrcList->clear();
     timeList.clear();
-    int num = 18;
+    int num = 16;
     while(num--)
     {
         QListWidgetItem *i = new QListWidgetItem;

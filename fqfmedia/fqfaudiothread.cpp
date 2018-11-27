@@ -61,6 +61,7 @@ void FQFAudioThread::clear()
     FQFDecodeThread::clear();
 	mux.lock();
     if (ap)ap->clear();
+    pts = 0;
 	mux.unlock();
 }
 

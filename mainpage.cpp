@@ -48,7 +48,6 @@ MainPage::MainPage(QWidget *parent) :
     //历史设置加载
     historyLoading();
     //启动定时器
-//    timerID = startTimer(UpdateTimerTime);
     updateTimer = new QTimer;
     connect(updateTimer,SIGNAL(timeout()),
             this,SLOT(updateTimerTimeoutSlot()));
@@ -97,7 +96,13 @@ void MainPage::mouseReleaseEvent(QMouseEvent *event)
 void MainPage::mouseMoveEvent(QMouseEvent *event)
 {
     if(isMove)
+    {
         this->move(event->pos() - oldPos + this->pos());
+        if(!LrcPage::getWidget()->isHidden())
+        {
+            LrcPage::getWidget()->move(event->pos() - oldPos + LrcPage::getWidget()->pos());
+        }
+    }
 }
 
 void MainPage::playNext()
@@ -274,6 +279,7 @@ void MainPage::uiMusicListInit()
     ui->musicShowList->addItems(musicList->getMusicNameList());
     //列表无边框
     ui->musicShowList->setFrameShape(QListWidget::NoFrame);
+//    connect(ui->musicShowList,SIGNAL())
 }
 
 void MainPage::optionInit()
@@ -441,7 +447,7 @@ void MainPage::changeEvent(QEvent *event)
     if(event->type()==QEvent::WindowStateChange){
 #ifdef _WIN32
         if(windowState() & Qt::WindowMinimized){
-            hide();
+            hideAllPage();
             if(isFirstInfo)
             {
                 if(trayIcon) trayIcon->showMessage(QString::fromLocal8Bit("提示"),
@@ -538,8 +544,18 @@ void MainPage::on_btnLrc_clicked()
     if(LrcPage::getWidget()->isHidden())
     {
         LrcPage::getWidget()->showPage();
-        LrcPage::getWidget()->move(this->x() + this->width(), this->y());
+        LrcPage::getWidget()->move(this->x() + 5 + this->width(), this->y());
     }
     else
         LrcPage::getWidget()->hide();
+}
+
+void MainPage::on_btnClearList_clicked()
+{
+    dt->setPause(true);
+    dt->clear();
+    ui->btnPlayPause->setText(QString::fromLocal8Bit("播放"));
+    ui->playProgressBar->setValue(0);
+    musicList->clearList();
+    ui->musicShowList->clear();
 }

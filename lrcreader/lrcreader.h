@@ -26,7 +26,7 @@ protected:
     QString author;
     QString album;
     QString somebody;
-    qint64 offset;
+    qint64 offset = 0;
 };
 
 #endif // LRCREADER_H

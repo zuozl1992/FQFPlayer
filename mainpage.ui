@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>350</width>
+    <width>367</width>
     <height>720</height>
    </rect>
   </property>
@@ -59,10 +59,17 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QPushButton" name="btnPlayModel">
+         <property name="text">
+          <string>顺序播放</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,1,0,1">
+      <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,1,0,0">
        <item>
         <widget class="QPushButton" name="btnAddMusic">
          <property name="text">
@@ -85,9 +92,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="btnPlayModel">
+        <widget class="QPushButton" name="btnClearList">
          <property name="text">
-          <string>顺序播放</string>
+          <string>清空列表</string>
          </property>
         </widget>
        </item>

@@ -20,11 +20,17 @@ bool FQFDemuxThread::openFile(const char * path)
 {
     if (!path || path[0] == '\0')
 		return false;
-
 	mux.lock();
+
     if (!demux) demux = new FQFDemux();
     if (!at) at = new FQFAudioThread();
     bool re = demux->openFile(path);
+    this->status = Play;
+    if (at)
+    {
+        at->clear();
+        at->setPause(false);
+    }
 	if (!re)
 	{
 		mux.unlock();
@@ -76,6 +82,7 @@ void FQFDemuxThread::clear()
 {
 	mux.lock();
     if (demux)demux->clear();
+    pts = 0;
     if (at)at->clear();
 	mux.unlock();
 }

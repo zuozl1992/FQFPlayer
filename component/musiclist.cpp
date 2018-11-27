@@ -138,6 +138,12 @@ void MusicList::save()
     db->close();
 }
 
+void MusicList::clearList()
+{
+    clearDatabase();
+    musicPathList.clear();
+}
+
 bool MusicList::checkPathType(const QString &path)
 {
     if(!QFile(DATABASEFILE).exists())
