@@ -1,7 +1,26 @@
 INCLUDEPATH += $$PWD
 
 INCLUDEPATH += ./../include
-LIBS += -L./../lib/win32 -lavformat -lavcodec -lavutil -lswresample
+
+win32{
+    #区分32位和64位windows程序
+    opt = $$find(QMAKESPEC,"msvc2015_64")
+    isEmpty(opt){
+        LIBS += -L./../lib/win32
+    }
+    !isEmpty(opt){
+        LIBS += -L./../lib/win64
+    }
+}
+unix{
+    LIBS += -L./../lib
+}
+mac{
+    LIBS += -L./../lib
+}
+
+
+LIBS += -lavformat -lavcodec -lavutil -lswresample
 
 HEADERS += \
     $$PWD/fqfaudiothread.h \

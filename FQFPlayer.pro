@@ -2,7 +2,22 @@ QT += multimedia core gui widgets sql
 CONFIG += c++11
 TEMPLATE = app
 
-DESTDIR = ../bin/win32
+win32{
+    opt = $$find(QMAKESPEC,"msvc2015_64")
+    isEmpty(opt){
+        DESTDIR = ../bin/win32
+    }
+    !isEmpty(opt){
+        DESTDIR = ../bin/win64
+    }
+}
+unix{
+    DESTDIR = ../bin
+}
+mac{
+    DESTDIR = ../bin
+}
+
 
 include(fqfmedia/fqfmedia.pri)
 include(qxtglobalshortcut/qxtglobalshortcut.pri)
