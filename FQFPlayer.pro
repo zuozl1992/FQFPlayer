@@ -1,49 +1,25 @@
-QT += multimedia core gui widgets sql
+QT += quick multimedia
 CONFIG += c++11
-TEMPLATE = app
 
-win32{
-    opt = $$find(QMAKESPEC,"msvc2015_64")
-    isEmpty(opt){
-        DESTDIR = ../bin/win32
-    }
-    !isEmpty(opt){
-        DESTDIR = ../bin/win64
-    }
-}
-unix{
-    DESTDIR = ../bin
-}
-mac{
-    DESTDIR = ../bin
-}
-
-
-include(fqfmedia/fqfmedia.pri)
-include(qxtglobalshortcut/qxtglobalshortcut.pri)
-include(component/component.pri)
-include(lrcreader/lrcreader.pri)
-
-FORMS += \
-    mainpage.ui \
-    optionpage.ui
-
-HEADERS += \
-    mainpage.h \
-    optionpage.h
+DESTDIR = ../bin/win64
+INCLUDEPATH += ./../include
+LIBS += -L./../lib/win64
+LIBS += -lFQFLib
 
 SOURCES += \
-    main.cpp \
-    mainpage.cpp \
-    optionpage.cpp
+        main.cpp \
+	colorquickimageprovider.cpp \
+	qmlfqfvideodevice.cpp \
+	qtfqfaudiodevice.cpp \
+	videocontrol.cpp
 
-RESOURCES += \
-    images.qrc
+HEADERS += \
+	colorquickimageprovider.h \
+	qmlfqfvideodevice.h \
+	qtfqfaudiodevice.h \
+	videocontrol.h
 
-RC_FILE += \
-    version.rc
 
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
+RESOURCES += qml.qrc \
+	images.qrc
+

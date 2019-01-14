@@ -1,6 +1,7 @@
 ﻿#include "qtfqfaudiodevice.h"
 #include <QAudioFormat>
 #include <QAudioOutput>
+#include <QDebug>
 
 QtFQFAudioDevice::~QtFQFAudioDevice()
 {
@@ -29,6 +30,24 @@ long long QtFQFAudioDevice::getBufferQueueLength()
     return pts;
 }
 void QtFQFAudioDevice::closeDevice()
+{
+    clearDevice();
+    mux.lock();
+    if (io)
+    {
+        io->close();
+        io = nullptr;
+    }
+    if (output)
+    {
+        output->stop();
+        delete output;
+        output = nullptr;
+    }
+    mux.unlock();
+}
+
+void QtFQFAudioDevice::exitDevice()
 {
     mux.lock();
     if (io)
@@ -77,7 +96,8 @@ bool QtFQFAudioDevice::openDevice(int sampleRate, int channels)
     if (io) return true;
     return false;
 }
-void QtFQFAudioDevice::clear() {
+void QtFQFAudioDevice::clearDevice()
+{
     mux.lock();
     if (io) io->reset();
     mux.unlock();
@@ -91,7 +111,7 @@ bool QtFQFAudioDevice::writeToDeviceBuffer(const unsigned char *data, int datasi
         mux.unlock();
         return false;
     }
-    qint64 size = io->write((const char *)data, datasize);
+    qint64 size = io->write(reinterpret_cast<const char *>(data), datasize);
     mux.unlock();
     if (datasize != size) return false;
     return true;
