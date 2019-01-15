@@ -15,17 +15,29 @@ VideoControl::~VideoControl()
 
 bool VideoControl::openMedia(QString path, int type)
 {
-    return dt->openFileTh(path.toStdString().c_str(),type);
+    bool ok = dt->openFileTh(path.toStdString().c_str(),type);
+    if(ok)
+    {
+        unsigned char *data;
+        int size;
+        if(dt->getMusicTitlePage(&data,&size))
+        {
+            QImage img = QImage::fromData(data,size);
+            dt->freeBuffer(&data);
+            qfvd->writeToDeviceBuffer(img);
+        }
+    }
+    return ok;
 }
 
 int VideoControl::getVideoWidth()
 {
-    return dt->getVideoWidth();
+    return qfvd->getVideoWidth();
 }
 
 int VideoControl::getVideoHeight()
 {
-    return dt->getVideoHeight();
+    return qfvd->getVideoHeight();
 }
 
 double VideoControl::getMediaPos()
@@ -43,4 +55,17 @@ void VideoControl::seek(double pos)
 void VideoControl::setPause(bool ok)
 {
     dt->setPause(ok);
+}
+
+QImage VideoControl::getTitlePage()
+{
+    unsigned char *data;
+    int size;
+    if(dt->getMusicTitlePage(&data,&size))
+    {
+        QImage img = QImage::fromData(data,size);
+        dt->freeBuffer(&data);
+        return img;
+    }
+    return QImage();
 }

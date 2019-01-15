@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "fqfaudiodevice.h"
-#include <mutex>
+#include <QMutex>
 
 class QAudioOutput;
 class QIODevice;
@@ -38,7 +38,7 @@ public:
 protected:
     QAudioOutput *output = nullptr;
     QIODevice *io = nullptr;
-    std::mutex mux;
+    QMutex mux;
     int sampleRate = 44100;
     int sampleSize = 16;
     int channels = 2;

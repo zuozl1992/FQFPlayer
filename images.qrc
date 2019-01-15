@@ -8,5 +8,8 @@
         <file>images/close_hover.png</file>
         <file>images/close_normal.png</file>
         <file>images/close_press.png</file>
+        <file>images/pause.png</file>
+        <file>images/play.png</file>
+        <file>images/stop.png</file>
     </qresource>
 </RCC>

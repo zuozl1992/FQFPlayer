@@ -6,22 +6,18 @@ import QtQuick.Controls 1.4
 Window {
     function openMedia(path,type)
     {
+        img.source = "image://Color/black"
+        img.visible = false
         if(!VideoControl.openMedia(path,type))
+        {
+            headAni2.running = true
+            headInfo.text = "打开失败"
+            pausePlay.imagePath = "qrc:/images/stop.png"
             return;
-        if(type === 0 || type === 2)
-        {
-            img.visible = true
-            video.videoWidth = VideoControl.getVideoWidth();
-            video.videoHeight = VideoControl.getVideoHeight();
-            update()
         }
-        else
-        {
-            img.visible = false
-            img.source = "image://Color/black"
-            video.videoWidth = 0;
-            video.videoHeight = 0;
-        }
+        pausePlay.imagePath = "qrc:/images/pause.png"
+        video.videoWidth = VideoControl.getVideoWidth();
+        video.videoHeight = VideoControl.getVideoHeight();
         var filename = String(path).split("/")[String(path).split("/").length-1]
         var arr = String(filename).split(".")
         var str = ""
@@ -48,14 +44,19 @@ Window {
     Connections {
         target: VideoControl
         onCallQmlRefeshImg: {
+            img.visible = true
             img.source = "image://CodeImg/"+ Math.random()
         }
     }
 
     Timer {
-        id: headHideTimer
+        id: hideTimer
         interval: 2000; running: false; repeat: true
-        onTriggered: headAni1.running = true
+        onTriggered:
+        {
+            headAni1.running = true
+            footAni1.running = true
+        }
     }
 
     Timer {
@@ -93,10 +94,10 @@ Window {
             onRunningChanged: {
                 if(running == true)
                 {
-                    headHideTimer.stop()
+                    hideTimer.stop()
                 }
                 else
-                    headHideTimer.restart()
+                    hideTimer.restart()
             }
         }
         Text {
@@ -160,10 +161,33 @@ Window {
     Item {
         id: foot
         width: parent.width
-        height: 60
-        y: parent.height - 60
+        height: 62
+        y: parent.height - 62
         x: 0
         z: 3
+        PropertyAnimation {
+            id: footAni1
+            target: foot
+            properties: "y"
+            to: foot.parent.height
+            duration: 500
+        }
+        PropertyAnimation {
+            id: footAni2
+            target: foot
+            properties: "y"
+            to: foot.parent.height - 62
+            duration: 500
+            onRunningChanged: {
+                if(running == true)
+                {
+                    hideTimer.stop()
+                }
+                else
+                    hideTimer.restart()
+            }
+        }
+
         Slider {
             id: videoPosPro
             width: parent.width
@@ -181,20 +205,27 @@ Window {
                 else
                 {
                     headAni2.running = false
+                    footAni2.running = false
                     VideoControl.seek(value)
                     headAni2.running = true
+                    footAni2.running = true
                     isChangeSlider = true
                 }
             }
         }
-        Button {
+        BtnImg {
             id: pausePlay
             anchors.left: parent.left
+            anchors.leftMargin: (parent.width - width)/2
             anchors.bottom: videoPosPro.top
+            imagePath: "qrc:/images/stop.png"
             property bool isPause: false
+            width: 40
+            height: 40
             onClicked: {
                 VideoControl.setPause(!isPause)
                 isPause = !isPause
+                imagePath = !isPause ? "qrc:/images/pause.png" : "qrc:/images/play.png"
             }
         }
     }
@@ -247,9 +278,15 @@ Window {
             anchors.margins: 60
             onClicked: {
                 if(head.y == -30)
+                {
                     headAni2.running = true
+                    footAni2.running = true
+                }
                 else
+                {
                     headAni1.running = true
+                    footAni1.running = true
+                }
             }
         }
     }

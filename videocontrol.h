@@ -19,6 +19,7 @@ public:
     Q_INVOKABLE double getMediaPos();
     Q_INVOKABLE void seek(double pos);
     Q_INVOKABLE void setPause(bool ok);
+    Q_INVOKABLE QImage getTitlePage();
 
     QmlFQFVideoDevice *qfvd = nullptr;
     QtFQFAudioDevice *qfad = nullptr;
