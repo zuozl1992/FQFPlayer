@@ -1,4 +1,5 @@
 #include "videocontrol.h"
+#include <QDebug>
 using namespace FQF;
 VideoControl::VideoControl(QObject *parent) : QObject(parent)
 {
@@ -7,6 +8,10 @@ VideoControl::VideoControl(QObject *parent) : QObject(parent)
     dt = new FQFDemuxThread(qfvd,qfad);
     connect(qfvd,SIGNAL(callQmlRefeshImg()),
             this,SIGNAL(callQmlRefeshImg()));
+    connect(qfad,SIGNAL(newLeftSpectrum(QJsonArray)),
+            this,SIGNAL(newLeftSpectrum(QJsonArray)));
+    connect(qfad,SIGNAL(newRightSpectrum(QJsonArray)),
+            this,SIGNAL(newRightSpectrum(QJsonArray)));
 }
 
 VideoControl::~VideoControl()
@@ -26,6 +31,15 @@ bool VideoControl::openMedia(QString path, int type)
             dt->freeBuffer(&data);
             qfvd->writeToDeviceBuffer(img);
         }
+        int temp = 41;
+        QString str = "#%1%2";
+        QJsonArray arr;
+        for(int i = 0;i < 256; i++)
+        {
+            arr.append(str.arg(255-i,2,16,QLatin1Char('0'))
+                       .arg(i,2,16,QLatin1Char('0')) + QString("%1").arg(temp,2,16,QLatin1Char('0')));
+        }
+        emit newColor(arr);
     }
     return ok;
 }

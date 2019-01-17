@@ -14,7 +14,7 @@ win32{
         LIBS += -L./../lib/win64
     }
 }
-LIBS += -lFQFLib
+LIBS += -lFQFLib -llibfftw3-3
 
 SOURCES += \
         main.cpp \

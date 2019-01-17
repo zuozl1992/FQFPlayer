@@ -2,6 +2,7 @@
 #define VIDEOCONTROL_H
 
 #include <QObject>
+#include <QJsonArray>
 #include "fqfdemuxthread.h"
 #include "qmlfqfvideodevice.h"
 #include "qtfqfaudiodevice.h"
@@ -26,6 +27,9 @@ public:
 
 signals:
     void callQmlRefeshImg();
+    void newLeftSpectrum(QJsonArray arr);
+    void newRightSpectrum(QJsonArray arr);
+    void newColor(QJsonArray arr);
 
 protected:
     FQF::FQFDemuxThread *dt;

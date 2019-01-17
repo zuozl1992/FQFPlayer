@@ -11,10 +11,20 @@ Window {
         if(!VideoControl.openMedia(path,type))
         {
             headAni2.running = true
+            footAni2.running = true
             headInfo.text = "打开失败"
             pausePlay.imagePath = "qrc:/images/stop.png"
             return;
         }
+        if(type === 1)
+        {
+            spectrum.visible = true
+        }
+        else
+        {
+            spectrum.visible = false
+        }
+
         pausePlay.imagePath = "qrc:/images/pause.png"
         video.videoWidth = VideoControl.getVideoWidth();
         video.videoHeight = VideoControl.getVideoHeight();
@@ -30,6 +40,7 @@ Window {
 
         headInfo.text = str
         headAni1.running = true
+        footAni1.running = true
     }
 
     id: mainPage
@@ -39,13 +50,42 @@ Window {
     minimumWidth: 600
     minimumHeight: 600
     property bool isChangeSlider: true
+    property bool specEnable: true
     title: qsTr("FQFVidePlayer")
+
+    Timer {
+        running: true
+        interval: 40
+        repeat: true
+        onTriggered: {
+            specEnable = true
+        }
+    }
 
     Connections {
         target: VideoControl
         onCallQmlRefeshImg: {
             img.visible = true
             img.source = "image://CodeImg/"+ Math.random()
+        }
+        onNewColor: {
+            for(var i = 0; i < 256; i++)
+            {
+                spectRep.itemAt(i).color = arr[i]
+            }
+        }
+
+        onNewLeftSpectrum: {
+            if(!mainPage.specEnable)
+                return;
+            var i;
+            for(i = 127; i < 256; i++)
+                spectRep.itemAt(i).height =
+                        (arr[i-127] * 4 > mainPage.height / 3) ? mainPage.height / 3 : arr[i-127] * 4
+            for(i = 0; i < 128; i++)
+                spectRep.itemAt(i).height =
+                        (arr[127-i] * 4 > mainPage.height / 3) ? mainPage.height / 3 : arr[127-i] * 4
+            mainPage.specEnable = false
         }
     }
 
@@ -67,6 +107,28 @@ Window {
                 return
             var pos = VideoControl.getMediaPos()
             videoPosPro.value = pos
+        }
+    }
+
+    Row {
+        id: spectrum
+        anchors.fill: parent
+        spacing: 1
+        visible: false
+        z: 4
+        Repeater {
+            id: spectRep
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            width: spectrum.width
+            model: 256
+            Rectangle {
+                width: (spectrum.width - 257) / 256
+                height: 0
+                anchors.bottom: spectRep.bottom
+                color: "green"
+                radius: width/2
+            }
         }
     }
 
@@ -164,7 +226,7 @@ Window {
         height: 62
         y: parent.height - 62
         x: 0
-        z: 3
+        z: 5
         PropertyAnimation {
             id: footAni1
             target: foot

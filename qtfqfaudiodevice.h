@@ -1,13 +1,17 @@
 ﻿#pragma once
 #include "fqfaudiodevice.h"
 #include <QMutex>
+#include <QObject>
+#include <QJsonArray>
 
 class QAudioOutput;
 class QIODevice;
 
-class QtFQFAudioDevice :public FQF::FQFAudioDevice
+class QtFQFAudioDevice : public QObject , public FQF::FQFAudioDevice
 {
+    Q_OBJECT
 public:
+    QtFQFAudioDevice(QObject *parent = nullptr);
     virtual ~QtFQFAudioDevice();
     //打开音频设备，该操作会先执行关闭操作，打开的样本大小为16b。
     //@param sampleRate 采样率
@@ -34,6 +38,10 @@ public:
     //暂停
     //@param isPause 为true时暂停播放
     virtual void setPause(bool isPause);
+
+signals:
+    void newLeftSpectrum(QJsonArray arr);
+    void newRightSpectrum(QJsonArray arr);
 
 protected:
     QAudioOutput *output = nullptr;
