@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/logo.png</file>
+        <file>images/logo_fqf1.png</file>
+        <file>images/logo_fqf2.png</file>
+        <file>images/logo_player1.png</file>
+        <file>images/logo_player2.png</file>
+        <file>images/close_hover.png</file>
+        <file>images/close_normal.png</file>
+        <file>images/close_press.png</file>
+        <file>images/pause.png</file>
+        <file>images/play.png</file>
+        <file>images/stop.png</file>
+    </qresource>
+</RCC>
