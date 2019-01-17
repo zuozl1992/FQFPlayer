@@ -123,7 +123,7 @@ bool QtFQFAudioDevice::writeToDeviceBuffer(const unsigned char *data, int datasi
     }
     qint64 size = io->write(reinterpret_cast<const char *>(data), datasize);
     int len = 256;
-    int n = 16;
+    int n = 12;
     double inAve = 0;
     if(datasize >= channels * len * 2 && size == datasize)
     {
@@ -154,7 +154,7 @@ bool QtFQFAudioDevice::writeToDeviceBuffer(const unsigned char *data, int datasi
         {
             //滤波
             max = 0;
-            min = 10;
+            min = 1;
             sum = 0;
             for(int j = 0; j < n; j++)
             {

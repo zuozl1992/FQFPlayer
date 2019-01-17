@@ -6,6 +6,7 @@ import QtQuick.Controls 1.4
 Window {
     function openMedia(path,type)
     {
+        mainPage.isFirstPic = true
         img.source = "image://Color/black"
         img.visible = false
         if(!VideoControl.openMedia(path,type))
@@ -21,11 +22,13 @@ Window {
         {
             spectrum.visible = true
             spectrumPoint.visible = true
+            lrcItem.visible = true
         }
         else
         {
             spectrum.visible = false
             spectrumPoint.visible = false
+            lrcItem.visible = false
         }
 
         pausePlay.imagePath = "qrc:/images/pause.png"
@@ -53,15 +56,27 @@ Window {
     minimumWidth: 600
     minimumHeight: 600
     property bool isChangeSlider: true
-    property bool specEnable: true
+    property bool specLeftEnable: true
+    property bool specRightEnable: true
+    property bool paintEnable: true
+    property bool isFirstPic: true
     title: qsTr("FQFVidePlayer")
+
+    onXChanged: {
+        mainPage.paintEnable = false
+    }
+    onYChanged: {
+        mainPage.paintEnable = false
+    }
 
     Timer {
         running: true
-        interval: 40
+        interval: 100
         repeat: true
         onTriggered: {
-            specEnable = true
+            specLeftEnable = true
+            specRightEnable = true
+            paintEnable = true
         }
     }
 
@@ -70,6 +85,11 @@ Window {
         onCallQmlRefeshImg: {
             img.visible = true
             img.source = "image://CodeImg/"+ Math.random()
+            if(mainPage.isFirstPic)
+            {
+                smallImg.source = "image://CodeImg/"+ Math.random()
+                mainPage.isFirstPic = false
+            }
         }
         onNewColor: {
             for(var i = 0; i < 256; i++)
@@ -79,27 +99,34 @@ Window {
         }
 
         onNewLeftSpectrum: {
-            if(!mainPage.specEnable)
+            if(!mainPage.paintEnable)
+                return
+            if(!mainPage.specLeftEnable)
                 return;
             var i;
             for(i = 128; i < 256; i++)
                 spectRep.itemAt(i).height =
-                        (arr[i-127] * 6 > mainPage.height / 3) ? mainPage.height / 3 : arr[i-127] * 6
+                        (arr[i-127] * 18 > mainPage.height / 3) ? mainPage.height / 3 : arr[i-127] * 18
             for(i = 0; i < 128; i++)
                 spectRep.itemAt(i).height =
-                        (arr[128-i] * 6 > mainPage.height / 3) ? mainPage.height / 3 : arr[128-i] * 6
+                        (arr[128-i] * 18 > mainPage.height / 3) ? mainPage.height / 3 : arr[128-i] * 18
+            mainPage.specLeftEnable = false
         }
         onNewRightSpectrum: {
-            if(!mainPage.specEnable)
+            if(!mainPage.paintEnable)
+                return
+            if(!mainPage.specRightEnable)
                 return;
             var i;
             for(i = 128; i < 256; i++)
+            {
                 spectRepPoint.itemAt(i).anchors.bottomMargin =
-                        (arr[i-127] * 6 > mainPage.height / 3) ? mainPage.height / 3 : arr[i-127] * 6 + 1
+                        (arr[i-127] * 18 > mainPage.height / 3) ? mainPage.height / 3 : arr[i-127] * 18 + 1
+            }
             for(i = 0; i < 128; i++)
                 spectRepPoint.itemAt(i).anchors.bottomMargin =
-                        (arr[128-i] * 6 > mainPage.height / 3) ? mainPage.height / 3 : arr[128-i] * 6 + 1
-            mainPage.specEnable = false
+                        (arr[128-i] * 18 > mainPage.height / 3) ? mainPage.height / 3 : arr[128-i] * 18 + 1
+            mainPage.specRightEnable = false
         }
     }
 
@@ -134,6 +161,8 @@ Window {
         spacing: ((parent.width - 257 * 2) / 256) > 3 ? (parent.width - 3 * 256) / 257 : 2
         visible: false
         z: 5
+
+
         Repeater {
             id: spectRepPoint
             anchors.left: parent.left
@@ -266,21 +295,22 @@ Window {
         id: foot
         width: parent.width
         height: 62
-        y: parent.height - 62
-        x: 0
-        z: 5
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 0
+        z: 3
         PropertyAnimation {
             id: footAni1
             target: foot
-            properties: "y"
-            to: foot.parent.height
+            properties: "anchors.bottomMargin"
+            to: -62
             duration: 500
         }
         PropertyAnimation {
             id: footAni2
             target: foot
-            properties: "y"
-            to: foot.parent.height - 62
+            properties: "anchors.bottomMargin"
+            to: 0
             duration: 500
             onStarted: {
                 hideTimer.stop()
@@ -358,6 +388,27 @@ Window {
             anchors.topMargin: (parent.height - height) / 2
             z: 2
             visible: false
+            Item {
+                id: lrcItem
+                visible: false
+                anchors.fill: parent
+                Rectangle {
+                    anchors.fill: parent
+                    color: "black"
+                    opacity: 0.8
+                    z: 2
+                }
+                Image {
+                    id: smallImg
+                    width: 120
+                    height: 120
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.leftMargin: 50
+                    anchors.topMargin: 50
+                    z: 3
+                }
+            }
         }
         Image {
             id: logo
@@ -374,6 +425,8 @@ Window {
                 }
             }
         }
+
+
         MouseArea {
             z: 2
             anchors.fill: parent
