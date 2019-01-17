@@ -16,13 +16,16 @@ Window {
             pausePlay.imagePath = "qrc:/images/stop.png"
             return;
         }
+        hideTimer.running = true
         if(type === 1)
         {
             spectrum.visible = true
+            spectrumPoint.visible = true
         }
         else
         {
             spectrum.visible = false
+            spectrumPoint.visible = false
         }
 
         pausePlay.imagePath = "qrc:/images/pause.png"
@@ -79,12 +82,23 @@ Window {
             if(!mainPage.specEnable)
                 return;
             var i;
-            for(i = 127; i < 256; i++)
+            for(i = 128; i < 256; i++)
                 spectRep.itemAt(i).height =
-                        (arr[i-127] * 4 > mainPage.height / 3) ? mainPage.height / 3 : arr[i-127] * 4
+                        (arr[i-127] * 6 > mainPage.height / 3) ? mainPage.height / 3 : arr[i-127] * 6
             for(i = 0; i < 128; i++)
                 spectRep.itemAt(i).height =
-                        (arr[127-i] * 4 > mainPage.height / 3) ? mainPage.height / 3 : arr[127-i] * 4
+                        (arr[128-i] * 6 > mainPage.height / 3) ? mainPage.height / 3 : arr[128-i] * 6
+        }
+        onNewRightSpectrum: {
+            if(!mainPage.specEnable)
+                return;
+            var i;
+            for(i = 128; i < 256; i++)
+                spectRepPoint.itemAt(i).anchors.bottomMargin =
+                        (arr[i-127] * 6 > mainPage.height / 3) ? mainPage.height / 3 : arr[i-127] * 6 + 1
+            for(i = 0; i < 128; i++)
+                spectRepPoint.itemAt(i).anchors.bottomMargin =
+                        (arr[128-i] * 6 > mainPage.height / 3) ? mainPage.height / 3 : arr[128-i] * 6 + 1
             mainPage.specEnable = false
         }
     }
@@ -111,8 +125,40 @@ Window {
     }
 
     Row {
+        id: spectrumPoint
+        width: parent.width - 2 * spacing
+        height: parent.height / 3 + 20
+        anchors.left: parent.left
+        anchors.leftMargin: spacing
+        anchors.bottom: foot.top
+        spacing: ((parent.width - 257 * 2) / 256) > 3 ? (parent.width - 3 * 256) / 257 : 2
+        visible: false
+        z: 5
+        Repeater {
+            id: spectRepPoint
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 10
+            width: spectrumPoint.width
+            height: spectrumPoint.height
+            model: 256
+            Rectangle {
+                width: ((spectrumPoint.parent.width - 257 * 2) / 256) > 3 ? 3 : (spectrumPoint.parent.width - 257 * 2) / 256
+                height: width
+                anchors.bottom: spectRepPoint.bottom
+                anchors.bottomMargin: 20
+                color: "purple"
+                radius: width/2
+            }
+        }
+    }
+
+    Row {
         id: spectrum
-        anchors.fill: parent
+        width: parent.width
+        height: parent.height / 3
+        anchors.left: parent.left
+        anchors.bottom: foot.top
         spacing: 1
         visible: false
         z: 4
@@ -120,6 +166,7 @@ Window {
             id: spectRep
             anchors.left: parent.left
             anchors.bottom: parent.bottom
+            anchors.bottomMargin: 10
             width: spectrum.width
             model: 256
             Rectangle {
@@ -153,13 +200,11 @@ Window {
             properties: "y"
             to: 0
             duration: 500
-            onRunningChanged: {
-                if(running == true)
-                {
-                    hideTimer.stop()
-                }
-                else
-                    hideTimer.restart()
+            onStarted: {
+                hideTimer.stop()
+            }
+            onFinished: {
+                hideTimer.restart()
             }
         }
         Text {
@@ -212,9 +257,6 @@ Window {
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-//                    openMedia("http://ivi.bupt.edu.cn/hls/cctv1hd.m3u8",2)
-                    openMedia("rtsp://admin:briup2017@192.168.1.120",2)
-
                 }
             }
         }
@@ -240,13 +282,11 @@ Window {
             properties: "y"
             to: foot.parent.height - 62
             duration: 500
-            onRunningChanged: {
-                if(running == true)
-                {
-                    hideTimer.stop()
-                }
-                else
-                    hideTimer.restart()
+            onStarted: {
+                hideTimer.stop()
+            }
+            onFinished: {
+                hideTimer.restart()
             }
         }
 
@@ -339,7 +379,7 @@ Window {
             anchors.fill: parent
             anchors.margins: 60
             onClicked: {
-                if(head.y == -30)
+                if(head.y == -30 || foot.y == foot.parent.height)
                 {
                     headAni2.running = true
                     footAni2.running = true

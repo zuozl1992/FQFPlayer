@@ -122,46 +122,89 @@ bool QtFQFAudioDevice::writeToDeviceBuffer(const unsigned char *data, int datasi
         return false;
     }
     qint64 size = io->write(reinterpret_cast<const char *>(data), datasize);
-    int len = 512;
+    int len = 256;
+    int n = 16;
+    double inAve = 0;
     if(datasize >= channels * len * 2 && size == datasize)
     {
+        //FFTW
         fftw_complex *in, *out;
         fftw_plan p;
         in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * len);
         out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * len);
         p = fftw_plan_dft_1d(len, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
         int j = 0;
+        //消除直流分量
         for(int i = 0; i < len * channels * 2; i += (2*channels))
         {
             in[j][0] = static_cast<double>(static_cast<short>(data[i+1] << 8 | data[i])) / 32768.0;
+            inAve += in[j][0];
             in[j][1] = 0.0;
             j++;
         }
+        inAve /= static_cast<double>(len);
+        for(int i = 0; i < len; i++)
+        {
+            in[i][0] -= inAve;
+        }
         fftw_execute(p);
         QJsonArray larr;
-        for(int i = 0; i < len / 2; i++)
+        double max, min, sum;
+        for(int i = 0; i < len/2 + 1; i++)
         {
-            double temp = sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]);
+            //滤波
+            max = 0;
+            min = 10;
+            sum = 0;
+            for(int j = 0; j < n; j++)
+            {
+                double temp = sqrt(out[i + j][0] * out[i + j][0] + out[i + j][1] * out[i + j][1]);
+                if(temp > max)
+                    max = temp;
+                if(temp < min)
+                    min = temp;
+                sum += temp;
+            }
+            double temp = (sum - max - min)/static_cast<double>(n - 2);
             larr.append(temp);
-
         }
         emit newLeftSpectrum(larr);
         if(channels >= 2)
         {
-            j = 0;
+            int j = 0;
+            //消除直流分量
             for(int i = 2; i < len * channels * 2; i += (2*channels))
             {
                 in[j][0] = static_cast<double>(static_cast<short>(data[i+1] << 8 | data[i])) / 32768.0;
+                inAve += in[j][0];
                 in[j][1] = 0.0;
                 j++;
             }
+            inAve /= static_cast<double>(len);
+            for(int i = 0; i < len; i++)
+            {
+                in[i][0] -= inAve;
+            }
             fftw_execute(p);
             QJsonArray rarr;
-            for(int i = 0; i < len / 2; i++)
+            double max, min, sum;
+            for(int i = 0; i < len/2 + 1; i++)
             {
-                double temp = sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]);
+                //滤波
+                max = 0;
+                min = 10;
+                sum = 0;
+                for(int j = 0; j < n; j++)
+                {
+                    double temp = sqrt(out[i + j][0] * out[i + j][0] + out[i + j][1] * out[i + j][1]);
+                    if(temp > max)
+                        max = temp;
+                    if(temp < min)
+                        min = temp;
+                    sum += temp;
+                }
+                double temp = (sum - max - min)/static_cast<double>(n - 2);
                 rarr.append(temp);
-
             }
             emit newRightSpectrum(rarr);
         }
