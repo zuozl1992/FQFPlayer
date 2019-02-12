@@ -28,6 +28,7 @@ public:
     Q_INVOKABLE bool prevMedia();
     Q_INVOKABLE bool mediaIsEnd();
     Q_INVOKABLE bool playNow();
+    Q_INVOKABLE bool openMedia(int index);
     Q_INVOKABLE int getNowMediaType();
     Q_INVOKABLE QString getNowMediaName();
 
@@ -42,6 +43,8 @@ signals:
     void newMediaList(QJsonArray arr);
 
 protected:
+    bool checkPath(QString path);
+
     FQF::FQFDemuxThread *dt;
     QJsonArray arr;
     int index = 0;

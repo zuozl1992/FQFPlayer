@@ -1,6 +1,7 @@
 #include "videocontrol.h"
 #include <QDebug>
 #include <QJsonObject>
+#include <QFile>
 using namespace FQF;
 VideoControl::VideoControl(QObject *parent) : QObject(parent)
 {
@@ -90,11 +91,25 @@ void VideoControl::addNewMediaToList(QStringList list, int type)
 {
     for(int i = 0; i < list.size(); i++)
     {
+        if(!checkPath(list.at(i)))
+            continue;
         QJsonObject obj;
         obj.insert("path",list.at(i));
         obj.insert("type",type);
         arr.append(obj);
     }
+    QJsonArray nameList;
+    for(int i = 0; i < arr.size(); i++)
+    {
+        QJsonObject obj;
+        QString path = arr.at(i).toObject().value("path").toString();
+        int first = path.lastIndexOf ("/"); //从后面查找"/"位置
+        QString title = path.right (path.length ()-first-1); //从右边截取
+        obj.insert("name",title);
+        obj.insert("type",arr.at(i).toObject().value("type").toInt());
+        nameList.append(obj);
+    }
+    emit newMediaList(nameList);
 }
 
 void VideoControl::clearMediaList()
@@ -143,6 +158,16 @@ bool VideoControl::playNow()
     return false;
 }
 
+bool VideoControl::openMedia(int index)
+{
+    if(arr.size() > index)
+    {
+        this->index = index;
+        return openMedia(arr.at(index).toObject().value("path").toString(),arr.at(index).toObject().value("type").toInt());
+    }
+    return false;
+}
+
 int VideoControl::getNowMediaType()
 {
     if(arr.size() > index)
@@ -160,4 +185,17 @@ QString VideoControl::getNowMediaName()
         return title;
     }
     return QString();
+}
+
+bool VideoControl::checkPath(QString path)
+{
+    QFile file(path);
+    if(!file.exists())
+        return false;
+    for(int i = 0; i < arr.size(); i++)
+    {
+        if(arr.at(i).toObject().value("path").toString() == path)
+            return false;
+    }
+    return true;
 }

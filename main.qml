@@ -2,6 +2,7 @@ import QtQuick 2.12
 import QtQuick.Window 2.12
 import Qt.labs.platform 1.1
 import QtQuick.Controls 1.4
+import QtQuick.Layouts 1.12
 
 Window {
     function openMedia(path,type)
@@ -47,6 +48,7 @@ Window {
         headInfo.text = str
         headAni1.running = true
         footAni1.running = true
+        rightListAni1.running = true
     }
 
     function updateUIState()
@@ -72,6 +74,7 @@ Window {
         headInfo.text = VideoControl.getNowMediaName()
         headAni1.running = true
         footAni1.running = true
+        rightListAni1.running = true
     }
 
     function openNowMedia()
@@ -80,6 +83,24 @@ Window {
         img.source = "image://Color/black"
         img.visible = false
         var re = VideoControl.playNow()
+        if(!re)
+        {
+            headAni2.running = true
+            footAni2.running = true
+            headInfo.text = "打开失败"
+            pausePlay.imagePath = "qrc:/images/stop.png"
+            return false;
+        }
+        updateUIState()
+        return re
+    }
+
+    function openMediaOfList(index)
+    {
+        mainPage.isFirstPic = true
+        img.source = "image://Color/black"
+        img.visible = false
+        var re = VideoControl.openMedia(index)
         if(!re)
         {
             headAni2.running = true
@@ -168,6 +189,15 @@ Window {
                 mainPage.isFirstPic = false
             }
         }
+
+        onNewMediaList: {
+            musicList.clear()
+            for(var i = 0; i < arr.length; i++)
+            {
+                musicList.append({"name" : arr[i].name, "type": arr[i].type})
+            }
+        }
+
         onNewColor: {
             for(var i = 0; i < 256; i++)
             {
@@ -214,6 +244,7 @@ Window {
         {
             headAni1.running = true
             footAni1.running = true
+            rightListAni1.running = true
         }
     }
 
@@ -241,7 +272,7 @@ Window {
         anchors.bottom: foot.top
         spacing: ((parent.width - 257 * 2) / 256) > 3 ? (parent.width - 3 * 256) / 257 : 2
         visible: false
-        z: 6
+        z: 10
 
 
         Repeater {
@@ -272,7 +303,7 @@ Window {
         anchors.bottom: foot.top
         spacing: 1
         visible: false
-        z: 5
+        z: 9
         Repeater {
             id: spectRep
             anchors.left: parent.left
@@ -286,6 +317,91 @@ Window {
                 anchors.bottom: spectRep.bottom
                 color: "green"
                 radius: width/2
+            }
+        }
+    }
+
+    //右侧列表区域
+    Rectangle {
+        id: rightMediaList
+        z: 8
+//        height: parent.height
+        anchors.top: head.bottom
+        anchors.bottom: parent.bottom
+        width: Math.max(180,parent.width * 0.3)
+        color: "#3f3f3fD0"
+        x: parent.width - width
+        y: 0
+        PropertyAnimation {
+            id: rightListAni1
+            target: rightMediaList
+            properties: "x"
+            to: rightMediaList.parent.width
+            duration: 500
+        }
+        PropertyAnimation {
+            id: rightListAni2
+            target: rightMediaList
+            properties: "x"
+            to: rightMediaList.parent.width - rightMediaList.width
+            duration: 500
+        }
+        ListView {
+            id: mediaListView
+            anchors.fill: parent
+            delegate: Item{
+                id: wrapper
+                width: parent.width
+                height: 25
+                MouseArea {
+                    z: 3
+                    anchors.fill: parent
+                    onClicked: {
+                        wrapper.ListView.view.currentIndex = index
+                    }
+
+                    onCanceled: {
+                        wrapper.ListView.view.currentIndex = index
+                    }
+
+                    onDoubleClicked: {
+                        openMediaOfList(index);
+                        wrapper.ListView.view.currentIndex = index
+                    }
+                }
+
+                RowLayout {
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    height: parent.height
+                    width: parent.width
+                    spacing: 2
+                    z: 2
+                    Text {
+                        text: name
+                        color: wrapper.ListView.isCurrentItem ? "blue" : "white"
+                        font.pointSize: 10
+                        clip: true
+                        Layout.preferredWidth: parent.width * 0.8
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    Item {
+                        Layout.preferredWidth: 10
+                    }
+                    Image {
+                        id: typeImg
+                        Layout.preferredHeight: 20
+                        Layout.preferredWidth: 20
+                        source: type == 0 ? "qrc:/images/video.png" : "qrc:/images/audio.png"
+                    }
+                    Item {
+                        Layout.fillWidth: true
+                    }
+                }
+            }
+            model: ListModel {
+                id: musicList
             }
         }
     }
@@ -341,7 +457,7 @@ Window {
             height: parent.height
             width: (parent.width / 2 - 24) / 2 - 8
             font.pointSize: 12
-            text: qsTr("打开文件")
+            text: qsTr("添加文件")
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
             color: "white"
@@ -361,16 +477,11 @@ Window {
             height: parent.height
             width: (parent.width / 2 - 24) / 2 - 8
             font.pointSize: 12
-            text: qsTr("打开串流")
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
             color: "white"
             z: 3
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                }
-            }
+
         }
     }
 
@@ -382,7 +493,7 @@ Window {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 0
-        z: 3
+        z: 9
         PropertyAnimation {
             id: footAni1
             target: foot
@@ -436,8 +547,8 @@ Window {
             anchors.bottom: videoPosPro.top
             imagePath: "qrc:/images/stop.png"
             property bool isPause: false
-            width: 40
-            height: 40
+            width: 30
+            height: 30
             onClicked: {
                 if(imagePath == "qrc:/images/stop.png"){
                     if(openNowMedia()){
@@ -459,8 +570,8 @@ Window {
             anchors.bottom: videoPosPro.top
             imagePath: "qrc:/images/next.png"
             property bool isPause: false
-            width: 40
-            height: 40
+            width: 30
+            height: 30
             onClicked: {
                 nextMedia()
             }
@@ -472,8 +583,8 @@ Window {
             anchors.bottom: videoPosPro.top
             imagePath: "qrc:/images/prev.png"
             property bool isPause: false
-            width: 40
-            height: 40
+            width: 30
+            height: 30
             onClicked: {
                 prevMedia()
             }
@@ -556,11 +667,13 @@ Window {
                 {
                     headAni2.running = true
                     footAni2.running = true
+                    rightListAni2.running = true
                 }
                 else
                 {
                     headAni1.running = true
                     footAni1.running = true
+                    rightListAni1.running = true
                 }
             }
         }
@@ -576,14 +689,6 @@ Window {
             "Audio Files (*.mp3 *.flac)"
         ];
         onAccepted: {
-//            var path = file.toString()
-//            var cs;
-//            if(Qt.platform.os == "windows"){
-//                cs = path.slice(8);
-//            }else{
-//                cs = path.slice(7);
-//            }
-//            openMedia(cs,selectedNameFilter.index)
             var list = [];
             for(var i = 0; i < files.length; i++)
             {
