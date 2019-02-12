@@ -21,6 +21,15 @@ public:
     Q_INVOKABLE void seek(double pos);
     Q_INVOKABLE void setPause(bool ok);
     Q_INVOKABLE QImage getTitlePage();
+    Q_INVOKABLE void addNewMediaToList(QStringList list,int type);
+    Q_INVOKABLE void clearMediaList();
+    Q_INVOKABLE void deleteMediaInList(int index);
+    Q_INVOKABLE bool nextMedia();
+    Q_INVOKABLE bool prevMedia();
+    Q_INVOKABLE bool mediaIsEnd();
+    Q_INVOKABLE bool playNow();
+    Q_INVOKABLE int getNowMediaType();
+    Q_INVOKABLE QString getNowMediaName();
 
     QmlFQFVideoDevice *qfvd = nullptr;
     QtFQFAudioDevice *qfad = nullptr;
@@ -30,10 +39,12 @@ signals:
     void newLeftSpectrum(QJsonArray arr);
     void newRightSpectrum(QJsonArray arr);
     void newColor(QJsonArray arr);
+    void newMediaList(QJsonArray arr);
 
 protected:
     FQF::FQFDemuxThread *dt;
-
+    QJsonArray arr;
+    int index = 0;
 };
 
 #endif // VIDEOCONTROL_H

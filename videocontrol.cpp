@@ -1,11 +1,13 @@
 #include "videocontrol.h"
 #include <QDebug>
+#include <QJsonObject>
 using namespace FQF;
 VideoControl::VideoControl(QObject *parent) : QObject(parent)
 {
     qfvd = new QmlFQFVideoDevice;
     qfad = new QtFQFAudioDevice;
     dt = new FQFDemuxThread(qfvd,qfad);
+
     connect(qfvd,SIGNAL(callQmlRefeshImg()),
             this,SIGNAL(callQmlRefeshImg()));
     connect(qfad,SIGNAL(newLeftSpectrum(QJsonArray)),
@@ -68,7 +70,7 @@ void VideoControl::seek(double pos)
 
 void VideoControl::setPause(bool ok)
 {
-    dt->setPause(ok);
+    dt->setPause(ok);  
 }
 
 QImage VideoControl::getTitlePage()
@@ -82,4 +84,80 @@ QImage VideoControl::getTitlePage()
         return img;
     }
     return QImage();
+}
+
+void VideoControl::addNewMediaToList(QStringList list, int type)
+{
+    for(int i = 0; i < list.size(); i++)
+    {
+        QJsonObject obj;
+        obj.insert("path",list.at(i));
+        obj.insert("type",type);
+        arr.append(obj);
+    }
+}
+
+void VideoControl::clearMediaList()
+{
+    arr = QJsonArray();
+}
+
+void VideoControl::deleteMediaInList(int index)
+{
+    arr.removeAt(index);
+}
+
+bool VideoControl::nextMedia()
+{
+    if(arr.isEmpty())
+        return false;
+    if(index >= arr.size())
+        index = 0;
+    else
+        index++;
+    return openMedia(arr.at(index).toObject().value("path").toString(),arr.at(index).toObject().value("type").toInt());
+}
+
+bool VideoControl::prevMedia()
+{
+    if(arr.isEmpty())
+        return false;
+    if(index <= 0)
+        index = arr.size() - 1;
+    else
+        index--;
+    return openMedia(arr.at(index).toObject().value("path").toString(),arr.at(index).toObject().value("type").toInt());
+}
+
+bool VideoControl::mediaIsEnd()
+{
+    if(dt->getMusicStatus() == FQF::FQFDemuxThread::End)
+        return true;
+    return false;
+}
+
+bool VideoControl::playNow()
+{
+    if(arr.size() > index)
+        return openMedia(arr.at(index).toObject().value("path").toString(),arr.at(index).toObject().value("type").toInt());
+    return false;
+}
+
+int VideoControl::getNowMediaType()
+{
+    if(arr.size() > index)
+        return arr.at(index).toObject().value("type").toInt();
+    return 0;
+}
+
+QString VideoControl::getNowMediaName()
+{
+    if(arr.size() > index)
+    {
+        QString path = arr.at(index).toObject().value("path").toString();
+        int first = path.lastIndexOf ("/"); //从后面查找"/"位置
+        QString title = path.right (path.length ()-first-1); //从右边截取
+        return title;
+    }
+    return QString();
 }

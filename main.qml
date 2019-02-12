@@ -22,13 +22,13 @@ Window {
         {
             spectrum.visible = true
             spectrumPoint.visible = true
-            lrcItem.visible = true
+            smallImgArea.visible = true
         }
         else
         {
             spectrum.visible = false
             spectrumPoint.visible = false
-            lrcItem.visible = false
+            smallImgArea.visible = false
         }
 
         pausePlay.imagePath = "qrc:/images/pause.png"
@@ -47,6 +47,83 @@ Window {
         headInfo.text = str
         headAni1.running = true
         footAni1.running = true
+    }
+
+    function updateUIState()
+    {
+
+        hideTimer.running = true
+        if(VideoControl.getNowMediaType() === 1)
+        {
+            spectrum.visible = true
+            spectrumPoint.visible = true
+            smallImgArea.visible = true
+        }
+        else
+        {
+            spectrum.visible = false
+            spectrumPoint.visible = false
+            smallImgArea.visible = false
+        }
+
+        pausePlay.imagePath = "qrc:/images/pause.png"
+        video.videoWidth = VideoControl.getVideoWidth()
+        video.videoHeight = VideoControl.getVideoHeight()
+        headInfo.text = VideoControl.getNowMediaName()
+        headAni1.running = true
+        footAni1.running = true
+    }
+
+    function openNowMedia()
+    {
+        mainPage.isFirstPic = true
+        img.source = "image://Color/black"
+        img.visible = false
+        var re = VideoControl.playNow()
+        if(!re)
+        {
+            headAni2.running = true
+            footAni2.running = true
+            headInfo.text = "打开失败"
+            pausePlay.imagePath = "qrc:/images/stop.png"
+            return false;
+        }
+        updateUIState()
+        return re
+    }
+
+    function nextMedia()
+    {
+        mainPage.isFirstPic = true
+        img.source = "image://Color/black"
+        img.visible = false
+        var re = VideoControl.nextMedia()
+        if(!re)
+        {
+            headAni2.running = true
+            footAni2.running = true
+            headInfo.text = "打开失败"
+            pausePlay.imagePath = "qrc:/images/stop.png"
+            return
+        }
+        updateUIState()
+    }
+
+    function prevMedia()
+    {
+        mainPage.isFirstPic = true
+        img.source = "image://Color/black"
+        img.visible = false
+        var re = VideoControl.prevMedia()
+        if(!re)
+        {
+            headAni2.running = true
+            footAni2.running = true
+            headInfo.text = "打开失败"
+            pausePlay.imagePath = "qrc:/images/stop.png"
+            return
+        }
+        updateUIState()
     }
 
     id: mainPage
@@ -144,6 +221,9 @@ Window {
         id: updateTimer
         interval: 100; running: true; repeat: true
         onTriggered: {
+            if(VideoControl.mediaIsEnd()){
+                nextMedia()
+            }
             if(!isChangeSlider)
                 return
             var pos = VideoControl.getMediaPos()
@@ -151,6 +231,7 @@ Window {
         }
     }
 
+    //频谱点
     Row {
         id: spectrumPoint
         width: parent.width - 2 * spacing
@@ -160,7 +241,7 @@ Window {
         anchors.bottom: foot.top
         spacing: ((parent.width - 257 * 2) / 256) > 3 ? (parent.width - 3 * 256) / 257 : 2
         visible: false
-        z: 5
+        z: 6
 
 
         Repeater {
@@ -182,6 +263,7 @@ Window {
         }
     }
 
+    //频谱线
     Row {
         id: spectrum
         width: parent.width
@@ -190,7 +272,7 @@ Window {
         anchors.bottom: foot.top
         spacing: 1
         visible: false
-        z: 4
+        z: 5
         Repeater {
             id: spectRep
             anchors.left: parent.left
@@ -208,13 +290,14 @@ Window {
         }
     }
 
+    //头部功能区
     Rectangle {
         id: head
         width: parent.width
         height: 30
         x: 0
         y: 0
-        z: 3
+        z: 4
         color: "#3f3f3f"
         PropertyAnimation {
             id: headAni1
@@ -291,6 +374,7 @@ Window {
         }
     }
 
+    //底部功能区
     Item {
         id: foot
         width: parent.width
@@ -355,13 +439,48 @@ Window {
             width: 40
             height: 40
             onClicked: {
-                VideoControl.setPause(!isPause)
-                isPause = !isPause
-                imagePath = !isPause ? "qrc:/images/pause.png" : "qrc:/images/play.png"
+                if(imagePath == "qrc:/images/stop.png"){
+                    if(openNowMedia()){
+                    isPause = false
+                    imagePath = "qrc:/images/pause.png"
+                    }
+                }
+                else{
+                    VideoControl.setPause(!isPause)
+                    isPause = !isPause
+                    imagePath = !isPause ? "qrc:/images/pause.png" : "qrc:/images/play.png"
+                }
+            }
+        }
+        BtnImg {
+            id: next
+            anchors.left: pausePlay.right
+            anchors.leftMargin: 16
+            anchors.bottom: videoPosPro.top
+            imagePath: "qrc:/images/next.png"
+            property bool isPause: false
+            width: 40
+            height: 40
+            onClicked: {
+                nextMedia()
+            }
+        }
+        BtnImg {
+            id: prev
+            anchors.right: pausePlay.left
+            anchors.rightMargin: 16
+            anchors.bottom: videoPosPro.top
+            imagePath: "qrc:/images/prev.png"
+            property bool isPause: false
+            width: 40
+            height: 40
+            onClicked: {
+                prevMedia()
             }
         }
     }
 
+    //视频区
     Rectangle {
         id: video
         color: "black"
@@ -386,10 +505,10 @@ Window {
             anchors.leftMargin: (parent.width - width) / 2
             anchors.top: parent.top
             anchors.topMargin: (parent.height - height) / 2
-            z: 2
+            z: 3
             visible: false
             Item {
-                id: lrcItem
+                id: smallImgArea
                 visible: false
                 anchors.fill: parent
                 Rectangle {
@@ -406,10 +525,12 @@ Window {
                     anchors.top: parent.top
                     anchors.leftMargin: 50
                     anchors.topMargin: 50
-                    z: 3
+                    z: 5
                 }
+
             }
         }
+        //Logo
         Image {
             id: logo
             width: 300
@@ -417,7 +538,7 @@ Window {
             anchors.centerIn: parent
             source: "qrc:/images/logo_player2.png"
             visible: !img.visible
-            z: 3
+            z: 4
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
@@ -425,7 +546,6 @@ Window {
                 }
             }
         }
-
 
         MouseArea {
             z: 2
@@ -450,19 +570,32 @@ Window {
         id: fileDialog;
         title: qsTr("Please choose an image file");
         selectedNameFilter.index: 0
+        fileMode: FileDialog.OpenFiles
         nameFilters: [
             "Video Files (*.mp4 *.mov)",
             "Audio Files (*.mp3 *.flac)"
         ];
         onAccepted: {
-            var path = file.toString()
-            var cs;
-            if(Qt.platform.os == "windows"){
-                cs = path.slice(8);
-            }else{
-                cs = path.slice(7);
+//            var path = file.toString()
+//            var cs;
+//            if(Qt.platform.os == "windows"){
+//                cs = path.slice(8);
+//            }else{
+//                cs = path.slice(7);
+//            }
+//            openMedia(cs,selectedNameFilter.index)
+            var list = [];
+            for(var i = 0; i < files.length; i++)
+            {
+                var cs;
+                if(Qt.platform.os == "windows"){
+                    cs = files[i].slice(8);
+                }else{
+                    cs = files[i].slice(7);
+                }
+                list[i] = cs;
             }
-            openMedia(cs,selectedNameFilter.index)
+            VideoControl.addNewMediaToList(list,selectedNameFilter.index);
         }
 
     }

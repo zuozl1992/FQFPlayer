@@ -17,8 +17,6 @@ int main(int argc, char *argv[])
     ColorQuickImageProvider *cqip = new ColorQuickImageProvider;
     engine.addImageProvider(QLatin1String("Color"), cqip);
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-    if (engine.rootObjects().isEmpty())
-        return -1;
 
     return app.exec();
 }
