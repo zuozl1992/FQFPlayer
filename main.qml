@@ -18,7 +18,6 @@ Window {
             pausePlay.imagePath = "qrc:/images/stop.png"
             return;
         }
-        hideTimer.running = true
         if(type === 1)
         {
             spectrum.visible = true
@@ -46,15 +45,11 @@ Window {
         }
 
         headInfo.text = str
-        headAni1.running = true
-        footAni1.running = true
-        rightListAni1.running = true
     }
 
     function updateUIState()
     {
 
-        hideTimer.running = true
         if(VideoControl.getNowMediaType() === 1)
         {
             spectrum.visible = true
@@ -72,9 +67,6 @@ Window {
         video.videoWidth = VideoControl.getVideoWidth()
         video.videoHeight = VideoControl.getVideoHeight()
         headInfo.text = VideoControl.getNowMediaName()
-        headAni1.running = true
-        footAni1.running = true
-        rightListAni1.running = true
     }
 
     function openNowMedia()
@@ -167,6 +159,7 @@ Window {
         mainPage.paintEnable = false
     }
 
+    //移动绘图保护
     Timer {
         running: true
         interval: 100
@@ -178,6 +171,7 @@ Window {
         }
     }
 
+    //c++/qml交互
     Connections {
         target: VideoControl
         onCallQmlRefeshImg: {
@@ -188,6 +182,10 @@ Window {
                 smallImg.source = "image://CodeImg/"+ Math.random()
                 mainPage.isFirstPic = false
             }
+        }
+
+        onUpdateListIndex: {
+            mediaListView.currentIndex = index
         }
 
         onNewMediaList: {
@@ -237,17 +235,35 @@ Window {
         }
     }
 
+    //自动隐藏
     Timer {
         id: hideTimer
-        interval: 2000; running: false; repeat: true
+        interval: 2000
+        repeat: true
+        running: (videoMouseArea.containsMouse ?
+                      false :
+                      pausePlay.hovered ?
+                          false :
+                          next.hovered ?
+                              false :
+                              prev.hovered ?
+                                  false :
+                                  videoPosPro.hovered ?
+                                      false :
+                                      videoPosPro.pressed ?
+                                          false :
+                                          footMouseArea.containsMouse ?
+                                              false :
+                                              headOpenFileMouseArea.containsMouse ?
+                                                  false : true)
         onTriggered:
         {
             headAni1.running = true
             footAni1.running = true
-            rightListAni1.running = true
         }
     }
 
+    //状态刷新
     Timer {
         id: updateTimer
         interval: 100; running: true; repeat: true
@@ -272,7 +288,7 @@ Window {
         anchors.bottom: foot.top
         spacing: ((parent.width - 257 * 2) / 256) > 3 ? (parent.width - 3 * 256) / 257 : 2
         visible: false
-        z: 10
+        z: 9
 
 
         Repeater {
@@ -303,7 +319,7 @@ Window {
         anchors.bottom: foot.top
         spacing: 1
         visible: false
-        z: 9
+        z: 8
         Repeater {
             id: spectRep
             anchors.left: parent.left
@@ -321,16 +337,40 @@ Window {
         }
     }
 
+    //播放列表按钮
+    BtnImg {
+        id: listLeftImage
+        imagePath: "qrc:/images/list2.png"
+        width: 40
+        height: 45
+        anchors.right: rightMediaList.left
+        anchors.top: rightMediaList.top
+        anchors.topMargin: (rightMediaList.height - height) / 2
+        z: 10
+        onClicked: {
+            if(imagePath == "qrc:/images/list2.png")
+            {
+                rightListAni2.running = true
+                imagePath = "qrc:/images/list3.png"
+            }
+            else
+            {
+                rightListAni1.running = true
+                imagePath = "qrc:/images/list2.png"
+            }
+        }
+    }
+
     //右侧列表区域
     Rectangle {
         id: rightMediaList
-        z: 8
-//        height: parent.height
-        anchors.top: head.bottom
+        z: 10
+        anchors.top: parent.top
         anchors.bottom: parent.bottom
+//        anchors.bottomMargin: 20
         width: Math.max(180,parent.width * 0.3)
         color: "#3f3f3fD0"
-        x: parent.width - width
+        x: rightMediaList.parent.width
         y: 0
         PropertyAnimation {
             id: rightListAni1
@@ -377,6 +417,9 @@ Window {
                     width: parent.width
                     spacing: 2
                     z: 2
+                    Item {
+                        Layout.preferredWidth: 10
+                    }
                     Text {
                         text: name
                         color: wrapper.ListView.isCurrentItem ? "blue" : "white"
@@ -415,6 +458,7 @@ Window {
         y: 0
         z: 4
         color: "#3f3f3f"
+        //动画
         PropertyAnimation {
             id: headAni1
             target: head
@@ -428,12 +472,6 @@ Window {
             properties: "y"
             to: 0
             duration: 500
-            onStarted: {
-                hideTimer.stop()
-            }
-            onFinished: {
-                hideTimer.restart()
-            }
         }
         Text {
             id: headInfo
@@ -463,7 +501,9 @@ Window {
             color: "white"
             z: 3
             MouseArea {
+                id: headOpenFileMouseArea
                 anchors.fill: parent
+                hoverEnabled: true
                 onClicked: {
                     fileDialog.open()
                 }
@@ -481,7 +521,6 @@ Window {
             verticalAlignment: Text.AlignVCenter
             color: "white"
             z: 3
-
         }
     }
 
@@ -493,7 +532,8 @@ Window {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 0
-        z: 9
+        z: 8
+        //动画
         PropertyAnimation {
             id: footAni1
             target: foot
@@ -507,14 +547,8 @@ Window {
             properties: "anchors.bottomMargin"
             to: 0
             duration: 500
-            onStarted: {
-                hideTimer.stop()
-            }
-            onFinished: {
-                hideTimer.restart()
-            }
         }
-
+        //进度条
         Slider {
             id: videoPosPro
             width: parent.width
@@ -524,6 +558,7 @@ Window {
             maximumValue: 1
             minimumValue: 0
             value: 0
+            z: 3
             onPressedChanged: {
                 if(pressed)
                 {
@@ -540,6 +575,7 @@ Window {
                 }
             }
         }
+        //按钮
         BtnImg {
             id: pausePlay
             anchors.left: parent.left
@@ -549,6 +585,7 @@ Window {
             property bool isPause: false
             width: 30
             height: 30
+            z: 3
             onClicked: {
                 if(imagePath == "qrc:/images/stop.png"){
                     if(openNowMedia()){
@@ -572,6 +609,7 @@ Window {
             property bool isPause: false
             width: 30
             height: 30
+            z: 3
             onClicked: {
                 nextMedia()
             }
@@ -585,9 +623,16 @@ Window {
             property bool isPause: false
             width: 30
             height: 30
+            z: 3
             onClicked: {
                 prevMedia()
             }
+        }
+        MouseArea {
+            id: footMouseArea
+            anchors.fill: parent
+            z: 2
+            hoverEnabled: true
         }
     }
 
@@ -659,26 +704,19 @@ Window {
         }
 
         MouseArea {
+            id: videoMouseArea
             z: 2
             anchors.fill: parent
             anchors.margins: 60
+            hoverEnabled: true
             onClicked: {
-                if(head.y == -30 || foot.y == foot.parent.height)
-                {
-                    headAni2.running = true
-                    footAni2.running = true
-                    rightListAni2.running = true
-                }
-                else
-                {
-                    headAni1.running = true
-                    footAni1.running = true
-                    rightListAni1.running = true
-                }
+                headAni2.running = true
+                footAni2.running = true
             }
         }
     }
 
+    //文件对话框
     FileDialog {
         id: fileDialog;
         title: qsTr("Please choose an image file");

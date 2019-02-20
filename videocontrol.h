@@ -41,6 +41,7 @@ signals:
     void newRightSpectrum(QJsonArray arr);
     void newColor(QJsonArray arr);
     void newMediaList(QJsonArray arr);
+    void updateListIndex(int index);
 
 protected:
     bool checkPath(QString path);

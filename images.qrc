@@ -15,5 +15,7 @@
         <file>images/prev.png</file>
         <file>images/audio.png</file>
         <file>images/video.png</file>
+        <file>images/list2.png</file>
+        <file>images/list3.png</file>
     </qresource>
 </RCC>

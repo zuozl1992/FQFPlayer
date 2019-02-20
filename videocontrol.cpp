@@ -1,4 +1,4 @@
-#include "videocontrol.h"
+﻿#include "videocontrol.h"
 #include <QDebug>
 #include <QJsonObject>
 #include <QFile>
@@ -130,6 +130,7 @@ bool VideoControl::nextMedia()
         index = 0;
     else
         index++;
+    emit updateListIndex(index);
     return openMedia(arr.at(index).toObject().value("path").toString(),arr.at(index).toObject().value("type").toInt());
 }
 
@@ -141,6 +142,7 @@ bool VideoControl::prevMedia()
         index = arr.size() - 1;
     else
         index--;
+    emit updateListIndex(index);
     return openMedia(arr.at(index).toObject().value("path").toString(),arr.at(index).toObject().value("type").toInt());
 }
 
@@ -154,7 +156,10 @@ bool VideoControl::mediaIsEnd()
 bool VideoControl::playNow()
 {
     if(arr.size() > index)
+    {
+        emit updateListIndex(index);
         return openMedia(arr.at(index).toObject().value("path").toString(),arr.at(index).toObject().value("type").toInt());
+    }
     return false;
 }
 
@@ -163,6 +168,7 @@ bool VideoControl::openMedia(int index)
     if(arr.size() > index)
     {
         this->index = index;
+        emit updateListIndex(index);
         return openMedia(arr.at(index).toObject().value("path").toString(),arr.at(index).toObject().value("type").toInt());
     }
     return false;
